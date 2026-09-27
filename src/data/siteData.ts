@@ -87,45 +87,6 @@ export const SITE_INFO = {
   ],
 };
 
-export const siteInfo = SITE_INFO;
-export default SITE_INFO;
-
-export const SITE_INFO = {
-  name: "MOHALKAR",
-  tagline: "ARCHITECTS & PLANNERS",
-  established: "Est. Excellence in Design",
-  heroHeading: "Every Space Has a Story — We Design Yours",
-  heroSub: "Modern Architecture · Interior Design · Urban Planning",
-  overview:
-    "Mohalkar Architects & Planners is a leading design consultancy specialising in residential, commercial, and urban planning. With a passion for purposeful beauty, we deliver innovative, sustainable, and tailored solutions to private clients, developers, and local bodies across India.",
-  secondaryOverview:
-    "From concept to completion, every project reflects our commitment to craftsmanship, context, and lasting value.",
-  stats: [
-    { value: "2+", label: "Years of Firm Excellence" },
-    { value: "88+", label: "Architectural & Engineering Sets" },
-    { value: "6+", label: "Design Disciplines" },
-    { value: "100%", label: "Client Satisfaction" },
-  ],
-  contacts: {
-    phonePrimary: "+91 9146079235",
-    phoneSecondary: "+91 8698300048",
-    emailPrimary: "mohalkararchitectsandplanners@gmail.com",
-    emailDirect: "abhishekmohalkar0062@gmail.com",
-    location: "Pune, Bhoom & Dharashiv, Maharashtra, India",
-    workingHours: "Monday – Saturday: 9:30 AM – 7:30 PM (IST)",
-    instagram: "https://www.instagram.com/abhi_mohalkar/",
-    instagramHandle: "@abhi_mohalkar",
-    linkedin: "https://linkedin.com/in/",
-    whatsappUrl: "https://wa.me/919146079235?text=Hello%20Mohalkar%20Architects-Planners,%20I%20would%20like%20to%20discuss%20a%20project!",
-  },
-  partners: [
-    { name: "Studio Partner 1", logo: "/images/associates1.png" },
-    { name: "Studio Partner 2", logo: "/images/associates2.png" },
-    { name: "Studio Partner 3", logo: "/images/associates3.jfif" },
-    { name: "Studio Partner 4", logo: "/images/associates4.png" },
-  ],
-};
-
 export const LEADERSHIP_PROFILES: LeadershipProfile[] = [
   {
     id: "ceo",
@@ -491,6 +452,3 @@ export const FAQ_LIST: FAQItem[] = [
       "Yes, absolutely. While our primary studios operate across Pune, Bhoom, and Dharashiv, our team undertakes projects pan-India. We have delivered architectural drawings and design consultations for clients in Mumbai, Delhi, Goa, Bangalore, and Hyderabad. We utilize virtual design workshops, cloud-based BIM coordination, and scheduled on-site inspections for seamless execution regardless of distance.",
   },
 ];
-
-export const siteInfo = SITE_INFO;
-export default SITE_INFO;
