@@ -251,3 +251,4 @@ export const generateCostEstimatePdf = (data: {
 
   doc.save(`mohalkar-feasibility-estimate.pdf`);
 };
+export default downloadSampleBlueprint;
