@@ -1,0 +1,6 @@
+{
+  "name": "Mohalkar Architects & Planners",
+  "description": "Premier architectural studio & urban planning consultancy specializing in residential, commercial, interior, landscape, and urban infrastructure design across India.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
