@@ -1,4 +1,13 @@
-import { PROJECTS_DATA, ProjectItem } from "../data/projectsData";
+import * as projectsDataModule from "../data/projectsData";
+import type { ProjectItem } from "../data/projectsData";
+
+const PROJECTS_DATA: ProjectItem[] =
+  (projectsDataModule as any).PROJECTS_DATA ||
+  (projectsDataModule as any).projectsData ||
+  (projectsDataModule as any).projects ||
+  (projectsDataModule as any).PROJECTS ||
+  (projectsDataModule as any).default ||
+  [];
 import {
   WorkingProject,
   INITIAL_WORKING_PROJECTS,

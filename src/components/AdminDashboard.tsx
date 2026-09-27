@@ -65,7 +65,17 @@ import {
   Shield,
   BadgeCheck
 } from "lucide-react";
-import { ProjectItem, PROJECT_CATEGORIES, PROJECTS_DATA } from "../data/projectsData";
+import * as projectsDataModule from "../data/projectsData";
+import { PROJECT_CATEGORIES } from "../data/projectsData";
+import type { ProjectItem } from "../data/projectsData";
+
+const PROJECTS_DATA: ProjectItem[] =
+  (projectsDataModule as any).PROJECTS_DATA ||
+  (projectsDataModule as any).projectsData ||
+  (projectsDataModule as any).projects ||
+  (projectsDataModule as any).PROJECTS ||
+  (projectsDataModule as any).default ||
+  [];
 import {
   WorkingProject,
   ViewerInsight,

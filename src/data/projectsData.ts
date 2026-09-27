@@ -1,166 +1,410 @@
-export interface Project {
+/**
+ * Mohalkar Architects & Planners - Consolidated Project Portfolio
+ * Grouped and enhanced with architectural specs, multi-view galleries, category mappings, and high-res local asset bindings.
+ */
+
+export interface ProjectItem {
   id: string;
   title: string;
-  category: 'Residential' | 'Commercial' | 'Interior' | 'Landscape' | 'Urban Planning' | 'Industrial' | 'Sanctions';
-  year: string;
-  location: string;
-  area: string;
-  client?: string;
-  scope: string[];
-  status: 'Completed' | 'Under Construction' | 'Masterplan Phase' | 'Sanction Approved';
-  description: string;
-  concept: string;
-  heroImage: string;
-  gallery: string[];
-  blueprints?: string[];
+  alt: string;
+  category: 'architecture' | 'interior' | 'urban' | 'infrastructure' | 'residential' | 'commercial' | 'industrial' | 'landscape' | 'viz' | 'working';
+  tag: string;
+  image: string;
   featured?: boolean;
-  budgetTier?: 'Ultra Luxury' | 'Premium Executive' | 'Standard Spec';
+  location?: string;
+  scale?: string;
+  scope?: string;
+  status?: 'working' | 'completed' | 'published';
+  progress?: number;
+  stage?: 'Concept' | 'Working Drawings' | 'Sanction Approval' | 'Under Construction' | 'Completed' | 'Published';
+  publishedAt?: string;
+  client?: string;
+  gallery?: string[];
 }
 
-export const initialProjects: Project[] = [
+export const PROJECT_CATEGORIES = [
+  { id: 'all', label: 'All Projects' },
+  { id: 'architecture', label: 'Architecture' },
+  { id: 'interior', label: 'Interior Design' },
+  { id: 'urban', label: 'Urban Design' },
+  { id: 'infrastructure', label: 'Infrastructure' },
+  { id: 'residential', label: 'Residential' },
+  { id: 'commercial', label: 'Commercial' },
+  { id: 'industrial', label: 'Industrial' },
+  { id: 'landscape', label: 'Landscape' },
+  { id: 'viz', label: '3D Visualization' },
+  { id: 'working', label: 'Working Drawings' },
+] as const;
+
+export const PROJECTS_DATA: ProjectItem[] = [
   {
-    id: 'aurora-residence',
-    title: 'Aurora Pavilion & Private Estate',
-    category: 'Residential',
-    year: '2025',
-    location: 'Lonavala / Pune Corridor, MH',
-    area: '14,500 sq.ft',
-    client: 'Private Tech Executive',
-    scope: ['Architecture', 'Landscape Integration', 'Interior Architecture', 'Structural Optimization'],
-    status: 'Completed',
-    description: 'A monolithic hilltop villa combining exposed textured basalt masonry with cantilevered glass volumes framing misty Western Ghat horizons.',
-    concept: 'Harmonizing passive bioclimatic cooling with expansive 4-meter cantilevers that shade thermal mass while dissolving the indoor-outdoor barrier.',
-    heroImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80',
+    id: "proj-havle-residence",
+    title: "Havle Residence & Villa Architecture",
+    alt: "Havle Residence Architectural Portfolio",
+    category: "architecture",
+    tag: "Architecture",
+    image: "/images/arc1.jpg",
     gallery: [
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80',
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1600&q=80',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1600&q=80',
-      'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1600&q=80'
-    ],
-    blueprints: [
-      'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80'
-    ],
-    featured: true,
-    budgetTier: 'Ultra Luxury'
-  },
-  {
-    id: 'nexus-commercial-tower',
-    title: 'Nexus Biophilic IT Headquarters',
-    category: 'Commercial',
-    year: '2024',
-    location: 'Baner Commercial Zone, Pune',
-    area: '82,000 sq.ft',
-    client: 'Nexus Global Ventures',
-    scope: ['Commercial Architecture', 'LEED Platinum Compliance', 'Façade Engineering', 'Municipal Sanctions'],
-    status: 'Completed',
-    description: 'An energy-efficient 12-storey commercial office tower with dynamic perforated brass sunshades and multi-level sky terraces.',
-    concept: 'Parametrically optimized double-skin envelope reducing solar heat gain by 38% while bringing filtered natural daylight to core collaboration hubs.',
-    heroImage: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80',
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80',
-      'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=80'
+      "/images/arc2.jpg",
+      "/images/arc3.jpg",
+      "/images/arc4.jpg",
+      "/images/arc5.jpg",
     ],
     featured: true,
-    budgetTier: 'Ultra Luxury'
+    location: "Bhoom, Maharashtra",
+    scale: "4,800 sq.ft",
+    scope: "Complete Architectural Elevation, Structural Fenestration, Solar Shading Louvers & Cantilever Vistas"
   },
   {
-    id: 'celestial-interior-penthouse',
-    title: 'The Sky Sanctuary Penthouse',
-    category: 'Interior',
-    year: '2025',
-    location: 'Koregaon Park Annexe, Pune',
-    area: '6,200 sq.ft',
-    client: 'Celebrity Industrialist',
-    scope: ['Luxury Interior Architecture', 'Bespoke Joinery', 'Architectural Lighting', 'Acoustic Engineering'],
-    status: 'Completed',
-    description: 'An ethereal duplex penthouse characterized by travertine micro-cement finishes, walnut fluted panelling, and integrated bronze architectural profiles.',
-    concept: 'Wabi-sabi architectural minimalism elevated with rich Indian tactile materiality, curated stone monoliths, and circadian lighting systems.',
-    heroImage: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+    id: "proj-tuljabhavani-complex",
+    title: "Tuljabhavani Temple Complex Area Development",
+    alt: "Tuljabhavani Temple Complex Urban Design",
+    category: "urban",
+    tag: "Urban Design",
+    image: "/images/urban1.jpg",
     gallery: [
-      'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
-      'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1600&q=80',
-      'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1600&q=80'
+      "/images/urban2.jpg",
     ],
     featured: true,
-    budgetTier: 'Ultra Luxury'
+    location: "Tuljapur / Dharashiv Region",
+    scale: "Civic Precinct",
+    scope: "Pilgrim Circulation, Heritage Conservation, Plaza Hardscape & Municipal Area Master Plan"
   },
   {
-    id: 'solstice-botanical-plaza',
-    title: 'Solstice Waterfront Botanical Promenade',
-    category: 'Landscape',
-    year: '2024',
-    location: 'Mula-Mutha Riverfront, Pune',
-    area: '185,000 sq.ft',
-    client: 'Civic Urban Renewal Trust',
-    scope: ['Landscape Masterplanning', 'Ecological Restoration', 'Hardscape Design', 'Public Plaza Architecture'],
-    status: 'Completed',
-    description: 'A regenerative public waterfront park integrating bio-swales, endemic flora zones, amphitheaters, and continuous pedestrian boardwalks.',
-    concept: 'Restoring riparian ecology while providing high-amenity public recreational space with zero stormwater runoff discharge.',
-    heroImage: 'https://images.unsplash.com/photo-1584467541268-b040f83be3fd?auto=format&fit=crop&w=1600&q=80',
+    id: "proj-5000-bungalow",
+    title: "5000 sq.ft Luxury Bungalow",
+    alt: "Luxury Bungalow Design",
+    category: "residential",
+    tag: "Residential",
+    image: "/images/project6.jpeg",
     gallery: [
-      'https://images.unsplash.com/photo-1584467541268-b040f83be3fd?auto=format&fit=crop&w=1600&q=80',
-      'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1600&q=80'
+      "/images/project1.jpeg",
+      "/images/project2.jpeg",
+    ],
+    featured: true,
+    location: "Bhoom, Maharashtra",
+    scale: "5,000 sq.ft",
+    scope: "Comprehensive Architectural Design, Climate-Responsive Courtyards & Interior Planning"
+  },
+  {
+    id: "proj-2500-bungalow",
+    title: "2,500 sq.ft Contemporary Bungalow Series",
+    alt: "Contemporary 2500 sq.ft Residence",
+    category: "residential",
+    tag: "Residential",
+    image: "/images/resi1.png",
+    gallery: [
+      "/images/resi2.png",
     ],
     featured: false,
-    budgetTier: 'Premium Executive'
+    location: "Pune, Maharashtra",
+    scale: "2,500 sq.ft",
+    scope: "Villa Master Layout, Modern Front Elevation & Structural Working Blueprints"
   },
   {
-    id: 'sahyadri-eco-resort',
-    title: 'Sahyadri Biosphere Eco Retreat',
-    category: 'Urban Planning',
-    year: '2025',
-    location: 'Mahabaleshwar Foothills, MH',
-    area: '42 Acres',
-    client: 'Heritage Agro-Tourism Group',
-    scope: ['Regional Masterplanning', 'Zoning & Sanctions', 'Eco-Chalet Architecture', 'Infrastructure Layout'],
-    status: 'Masterplan Phase',
-    description: 'A 42-acre low-impact hospitality masterplan preserving 78% natural tree canopy with rammed earth cottages and renewable micro-grids.',
-    concept: 'Zero-carbon masterplanning following contour topology, natural hydrology pathways, and indigenous mud-lime construction.',
-    heroImage: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1600&q=80',
+    id: "proj-1750-bungalow",
+    title: "1,750 sq.ft Compact Luxury Bungalow",
+    alt: "Compact Luxury Residence",
+    category: "residential",
+    tag: "Residential",
+    image: "/images/resi4.jpg",
+    featured: false,
+    location: "Dharashiv, Maharashtra",
+    scale: "1,750 sq.ft",
+    scope: "Compact Villa Elevation, Natural Daylighting & Vaastu Planning"
+  },
+  {
+    id: "proj-industrial-complex",
+    title: "Industrial Shed & Manufacturing Complex",
+    alt: "Industrial Shed Design",
+    category: "industrial",
+    tag: "Industrial",
+    image: "/images/industrial1.jpg",
     gallery: [
-      'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1600&q=80',
-      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=80'
+      "/images/industrial2.jpg",
+      "/images/industrial3.jpg",
     ],
     featured: true,
-    budgetTier: 'Ultra Luxury'
+    location: "MIDC Industrial Zone, Maharashtra",
+    scale: "28,000 sq.ft",
+    scope: "Steel Truss Structural Engineering, Heavy Vehicle Logistics & Ventilation Chimneys"
   },
   {
-    id: 'precision-logistics-park',
-    title: 'Chakan Advanced Industrial & Logistics Hub',
-    category: 'Industrial',
-    year: '2024',
-    location: 'Chakan MIDC Phase IV, Pune',
-    area: '240,000 sq.ft',
-    client: 'Auto Ancillary Consortium',
-    scope: ['Industrial Architecture', 'PEB Structural Engineering', 'Fire & Safety Sanctions', 'Heavy Vehicle Circulation'],
-    status: 'Completed',
-    description: 'High-bay manufacturing and warehouse facility with clear span pre-engineered steel frames, thermal insulated claddings, and automated dispatch docks.',
-    concept: 'Optimized logistic turning radiuses, natural ventilation stacks, and heavy structural load-bearing slab systems.',
-    heroImage: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1600&q=80',
+    id: "proj-land-subdivision",
+    title: "Land Subdivision & Master Township Layout",
+    alt: "Land Subdivision Layout",
+    category: "landscape",
+    tag: "Landscape",
+    image: "/images/landscape1.jpg",
     gallery: [
-      'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1600&q=80'
+      "/images/landscape2.jpg",
+      "/images/landscape7.jpg",
+      "/images/landscape8.jpg",
     ],
-    featured: false,
-    budgetTier: 'Premium Executive'
+    featured: true,
+    location: "Bhoom / Dharashiv Region",
+    scale: "12 Acres Master Plan",
+    scope: "NA Plotting Layout, Internal Arterial Roads, Open Green Corridors & Stormwater Networks"
   },
   {
-    id: 'urban-sanctions-dcr-master',
-    title: 'Municipal Sanction & Unified DCR Approvals Hub',
-    category: 'Sanctions',
-    year: '2025',
-    location: 'PMC / PCMC / PMRDA Jurisdictions',
-    area: 'Over 500,000+ sq.ft Sanctioned',
-    client: 'Multi-Developer Portfolios',
-    scope: ['UDCPR 2020 Compliance', 'FSI / TDR Optimization', 'Structural Feasibility', 'Fire NOC & Environmental Clearances'],
-    status: 'Sanction Approved',
-    description: 'Comprehensive statutory municipal approvals, liaisoning, AutoDCR scrutiny drawings, and building sanction compliance.',
-    concept: 'Maximizing permissible carpet area through intelligent premium FSI, TDR utilization, and stringent statutory safety compliance.',
-    heroImage: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=80',
+    id: "proj-botanical-landscape",
+    title: "Botanical Terraced Landscape & Waterfront Master Plan",
+    alt: "Botanical Landscape Architecture",
+    category: "landscape",
+    tag: "Landscape",
+    image: "/images/landscape9.jpg",
     gallery: [
-      'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=80'
+      "/images/landscape3.jpg",
+      "/images/landscape4.jpg",
+      "/images/landscape5.jpg",
+      "/images/landscape6.jpg",
+      "/images/landscape10.jpg",
+      "/images/landscape12.jpg",
+    ],
+    featured: true,
+    location: "Pune & Bhoom Outskirts",
+    scale: "18,000 sq.ft",
+    scope: "Stepped Contour Retaining, Native Drought-Tolerant Planting, Aquatic Bio-Filter Pond & Zen Pavilions"
+  },
+  {
+    id: "proj-2000-luxury-3d",
+    title: "2,000 sq.ft Luxury Bungalow (3D Visualization)",
+    alt: "2000 sq.ft Luxury Bungalow 3D Renderings",
+    category: "viz",
+    tag: "3D Visualization",
+    image: "/images/3d1.png",
+    gallery: [
+      "/images/3d2.png",
+      "/images/3d3.png",
+    ],
+    featured: true,
+    location: "Maharashtra",
+    scale: "2,000 sq.ft",
+    scope: "Photorealistic Day/Dusk Lumion Renders, Material Texturing & Landscape Integration"
+  },
+  {
+    id: "proj-hati-talav",
+    title: "Proposed Hati Talav Lakefront Promenade",
+    alt: "Hati Talav Lakefront 3D Design",
+    category: "viz",
+    tag: "3D Visualization",
+    image: "/images/3d4.jpg",
+    gallery: [
+      "/images/3d5.jpg",
     ],
     featured: false,
-    budgetTier: 'Standard Spec'
+    location: "Dharashiv District",
+    scale: "Public Waterfront",
+    scope: "Lake Edge Beautification, Pedestrian Boardwalk, Plaza Stepping & Illumination Renders"
+  },
+  {
+    id: "proj-living-salon-interior",
+    title: "Contemporary Living Salon & Lounge Interior Suite",
+    alt: "Living Room Interior Portfolio",
+    category: "interior",
+    tag: "Interior Design",
+    image: "/images/interior7.png",
+    gallery: [
+      "/images/interior8.png",
+      "/images/interior9.png",
+      "/images/interior11.png",
+      "/images/interior12.png",
+      "/images/interior17.png",
+      "/images/interior19.png",
+      "/images/interior1.jpeg",
+      "/images/interior6.jpeg",
+    ],
+    featured: true,
+    location: "Pune, Maharashtra",
+    scale: "1,600 sq.ft",
+    scope: "Formal Living Salon, Recessed Cove Lighting, Acoustic Louvers, Italian Marble & Custom Furniture"
+  },
+  {
+    id: "proj-dining-kitchen-interior",
+    title: "Dining Salon & Modular Quartz Kitchen Suite",
+    alt: "Dining and Kitchen Interior",
+    category: "interior",
+    tag: "Interior Design",
+    image: "/images/interior10.png",
+    gallery: [
+      "/images/interior18.png",
+      "/images/interior13.png",
+      "/images/interior3.jpeg",
+    ],
+    featured: false,
+    location: "Pune, Maharashtra",
+    scale: "850 sq.ft",
+    scope: "Integrated Dining Island, Handleless Matte Black Cabinetry, Quartz Waterfall Edge & Breakfast Bar"
+  },
+  {
+    id: "proj-master-bedroom-suite",
+    title: "Master Bedroom Suites & Acoustic Timber Joinery",
+    alt: "Master Bedroom Suites",
+    category: "interior",
+    tag: "Interior Design",
+    image: "/images/interior14.png",
+    gallery: [
+      "/images/interior15.png",
+      "/images/interior16.png",
+      "/images/interior2.jpeg",
+      "/images/interior4.jpeg",
+      "/images/interior5.jpeg",
+    ],
+    featured: true,
+    location: "Bhoom, Maharashtra",
+    scale: "950 sq.ft",
+    scope: "Fluted Timber Bed Backdrops, Concealed Walk-in Wardrobe, False Ceiling & Ensuite Spa Detail"
+  },
+  {
+    id: "proj-akluj-bypass-infra",
+    title: "30m Wide Akluj Bypass Arterial Highway & Infrastructure",
+    alt: "Akluj Bypass Road Planning",
+    category: "infrastructure",
+    tag: "Infrastructure",
+    image: "/images/infra1.jpg",
+    gallery: [
+      "/images/infra2.jpg",
+      "/images/infra5.jpg",
+    ],
+    featured: false,
+    location: "Akluj Region, Maharashtra",
+    scale: "30m Right-of-Way",
+    scope: "Highway Alignment, Cross-Sections, Stormwater Drainage Culverts & Junction Intersection Geometry"
+  },
+  {
+    id: "proj-internal-roads-infra",
+    title: "Internal Road Network & Pedestrian Corridors",
+    alt: "Internal Road Network Infrastructure",
+    category: "infrastructure",
+    tag: "Infrastructure",
+    image: "/images/infra4.jpg",
+    gallery: [
+      "/images/infra6.jpg",
+    ],
+    featured: false,
+    location: "Mukai Chowk to Shinde Vasti",
+    scale: "9m Road Corridor",
+    scope: "Pedestrian Walkway Integration, Road Crossfall, Utility Ducts & Asphalt Pavement Design"
+  },
+  {
+    id: "proj-shopping-mall-master",
+    title: "Grand Apex Shopping Mall & Cineplex Master Portfolio",
+    alt: "Commercial Shopping Mall Complete Architectural Blueprints",
+    category: "commercial",
+    tag: "Commercial",
+    image: "/images/Commercial/COMPILEDFINALSHEETS_page-0004.jpg",
+    gallery: [
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0001.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0002.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0003.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0005.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0006.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0007.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0008.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0009.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0010.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0011.jpg",
+      "/images/Commercial/COMPILEDFINALSHEETS_page-0012.jpg",
+    ],
+    featured: true,
+    location: "Hinjawadi, Pune",
+    scale: "26,642.68 sq.m Site",
+    scope: "Full Commercial Set: Micro-climate, Master Site Circulation, 2-Level Basement Parking (320 Cars), Retail Arcades, Central Atrium, 4-Screen Multiplex & Facade Elevations"
+  },
+  {
+    id: "proj-working-drawings-master",
+    title: "Turnkey Working Drawings & GFC Construction Blueprint Set",
+    alt: "Architectural & Structural Working Drawings",
+    category: "working",
+    tag: "Working Drawings",
+    image: "/images/working drawings/WD-IICompiledportfolio_page-0001.jpg",
+    gallery: [
+      "/images/working drawings/WD-IICompiledportfolio_page-0002.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0003.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0004.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0005.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0006.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0007.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0008.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0009.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0010.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0011.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0012.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0013.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0014.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0015.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0016.jpg",
+      "/images/working drawings/WD-IICompiledportfolio_page-0017.jpg",
+    ],
+    featured: true,
+    location: "Pimpri-Chinchwad, Pune",
+    scale: "676 sq.m Multi-Storey Plot",
+    scope: "Complete GFC Blueprint Set: Setting-out Triangulation, Centre Line Column Grid C1-C16, Footings, Plinth Beams, Floor Plans, Longitudinal/Transverse Sections & Joinery UPVC Details"
+  },
+  {
+    id: "proj-signature-villa-horizon",
+    title: "Signature Villa Horizon",
+    alt: "Contemporary Cantilever Villa",
+    category: "architecture",
+    tag: "Architecture",
+    image: "/images/project1.jpeg",
+    gallery: [
+      "/images/project5.jpeg",
+      "/images/project4.jpeg",
+    ],
+    featured: true,
+    location: "Pune, Maharashtra",
+    scale: "6,200 sq.ft",
+    scope: "Modernist Residence with Board-Formed Concrete, Reflective Water Courtyard & Cantilevered Balconies"
+  },
+  {
+    id: "proj-solarium-estate",
+    title: "The Solarium Estate & Biophilic Residence",
+    alt: "Biophilic Luxury Residence",
+    category: "residential",
+    tag: "Residential",
+    image: "/images/project2.jpeg",
+    gallery: [
+      "/images/project6.jpeg",
+    ],
+    featured: true,
+    location: "Bhoom, Maharashtra",
+    scale: "5,400 sq.ft",
+    scope: "Climate-Responsive Multi-Generational Home with Passive Solar Chimney & Shaded Terraces"
+  },
+  {
+    id: "proj-apex-plaza-hub",
+    title: "Apex Commercial Plaza & Corporate Hub",
+    alt: "Commercial Plaza Hub",
+    category: "commercial",
+    tag: "Commercial",
+    image: "/images/project3.jpg",
+    featured: true,
+    location: "Bhoom, Maharashtra",
+    scale: "32,000 sq.ft",
+    scope: "Commercial Facade, Central Sky-Lit Atrium, Corporate Office Suites & Ground Retail"
+  },
+  {
+    id: "proj-courtyard-pavilion",
+    title: "Courtyard Serenity Pavilion",
+    alt: "Courtyard Pavilion Architecture",
+    category: "architecture",
+    tag: "Architecture",
+    image: "/images/project5.jpeg",
+    gallery: [
+      "/images/project4.jpeg",
+    ],
+    featured: true,
+    location: "Dharashiv, Maharashtra",
+    scale: "4,200 sq.ft",
+    scope: "Inward-Focused Contemporary Home around a Meditative Central Water Court & Basalt Stone Walls"
   }
 ];
+
+// Compatibility aliases for seamless export resolution
+export const projectsData = PROJECTS_DATA;
+export const projects = PROJECTS_DATA;
+export const PROJECTS = PROJECTS_DATA;
+export const INITIAL_PROJECTS = PROJECTS_DATA;
+export const studioProjects = PROJECTS_DATA;
+export default PROJECTS_DATA;
