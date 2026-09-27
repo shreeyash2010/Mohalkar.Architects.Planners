@@ -115,10 +115,15 @@ export const EnquirySection: React.FC<EnquirySectionProps> = ({ initialEstimate 
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
+        location: formData.location || "Maharashtra",
         project_location: formData.location || "Maharashtra",
+        type: formData.type,
         project_type: formData.type,
+        budget: formData.budget || "Discuss upon consultation",
         approximate_budget: formData.budget || "Discuss upon consultation",
+        source: formData.source,
         referral_source: formData.source,
+        details: formData.details,
         project_details: formData.details,
         _subject: `New Project Enquiry: ${formData.name} (${formData.type.toUpperCase()}) - Mohalkar Architects`,
         _cc: "abhishekmohalkar0062@gmail.com",
@@ -127,21 +132,46 @@ export const EnquirySection: React.FC<EnquirySectionProps> = ({ initialEstimate 
         _captcha: "false",
       };
 
-      const response = await fetch(
-        "https://formsubmit.co/ajax/mohalkararchitectsandplanners@gmail.com",
-        {
+      // 1. Try Vercel Serverless Function first (/api/send-email)
+      let sentSuccessfully = false;
+      try {
+        const vercelApiResponse = await fetch("/api/send-email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Accept: "application/json",
           },
           body: JSON.stringify(payload),
-        }
-      );
+        });
 
-      const result = await response.json().catch(() => null);
-      if (result && result.message && typeof result.message === "string") {
-        setServerNotice(result.message);
+        if (vercelApiResponse.ok) {
+          const apiData = await vercelApiResponse.json().catch(() => null);
+          if (apiData?.message) {
+            setServerNotice(apiData.message);
+          }
+          sentSuccessfully = true;
+        }
+      } catch (e) {
+        console.info("Vercel /api/send-email not available in this environment, using direct relay.", e);
+      }
+
+      // 2. Direct FormSubmit relay fallback
+      if (!sentSuccessfully) {
+        const response = await fetch(
+          "https://formsubmit.co/ajax/mohalkararchitectsandplanners@gmail.com",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        const result = await response.json().catch(() => null);
+        if (result && result.message && typeof result.message === "string") {
+          setServerNotice(result.message);
+        }
       }
 
       recordNewClientEnquiry({
