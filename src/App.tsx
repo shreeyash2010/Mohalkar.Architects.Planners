@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MessageCircle, X, ArrowUpRight } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { HomeSection } from "./components/HomeSection";
@@ -262,6 +263,7 @@ export default function App() {
 
       {/* Vercel Web Analytics */}
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
