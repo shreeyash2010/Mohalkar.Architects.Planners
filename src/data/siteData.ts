@@ -452,3 +452,12 @@ export const FAQ_LIST: FAQItem[] = [
       "Yes, absolutely. While our primary studios operate across Pune, Bhoom, and Dharashiv, our team undertakes projects pan-India. We have delivered architectural drawings and design consultations for clients in Mumbai, Delhi, Goa, Bangalore, and Hyderabad. We utilize virtual design workshops, cloud-based BIM coordination, and scheduled on-site inspections for seamless execution regardless of distance.",
   },
 ];
+
+export const siteInfo = SITE_INFO;
+export const SERVICES = SERVICES_LIST;
+export const FAQS = FAQ_LIST;
+export const FAQ = FAQ_LIST;
+export const WORKFLOW = WORKFLOW_STEPS;
+export const STEPS = WORKFLOW_STEPS;
+export const VALUES = CORE_VALUES;
+export default SITE_INFO;
