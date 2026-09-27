@@ -11,7 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.0",

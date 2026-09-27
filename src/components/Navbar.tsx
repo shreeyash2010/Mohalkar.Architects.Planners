@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Menu, X, ArrowUpRight, Phone, MessageCircle } from "lucide-react";
-import { SITE_INFO } from "../data/siteData";
+import * as siteDataModule from "../data/siteData";
+
+const SITE_INFO =
+  (siteDataModule as any).SITE_INFO ||
+  (siteDataModule as any).siteInfo ||
+  (siteDataModule as any).default || {
+    contacts: {
+      phonePrimary: "+91 9146079235",
+      whatsappUrl:
+        "https://wa.me/919146079235?text=Hello%20Mohalkar%20Architects-Planners,%20I%20would%20like%20to%20discuss%20a%20project!",
+    },
+  };
 import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "../context/ThemeContext";
 
