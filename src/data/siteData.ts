@@ -453,11 +453,42 @@ export const FAQ_LIST: FAQItem[] = [
   },
 ];
 
-export const siteInfo = SITE_INFO;
+// Comprehensive export aliases for seamless compatibility
+export const studioLeadership = LEADERSHIP_PROFILES;
+export const leadershipProfiles = LEADERSHIP_PROFILES;
+export const leadership = LEADERSHIP_PROFILES;
+export const leaders = LEADERSHIP_PROFILES;
+
+export const studioMilestones = MILESTONES;
+export const milestones = MILESTONES;
+
+export const studioValues = CORE_VALUES;
+export const coreValues = CORE_VALUES;
+export const values = CORE_VALUES;
+export const VALUES = CORE_VALUES;
+
+export const studioServices = SERVICES_LIST;
+export const servicesList = SERVICES_LIST;
+export const services = SERVICES_LIST;
 export const SERVICES = SERVICES_LIST;
+
+export const studioFaqs = FAQ_LIST;
+export const faqsList = FAQ_LIST;
+export const faqs = FAQ_LIST;
 export const FAQS = FAQ_LIST;
 export const FAQ = FAQ_LIST;
+
+export const studioWorkflow = WORKFLOW_STEPS;
+export const workflowSteps = WORKFLOW_STEPS;
+export const workflow = WORKFLOW_STEPS;
 export const WORKFLOW = WORKFLOW_STEPS;
 export const STEPS = WORKFLOW_STEPS;
-export const VALUES = CORE_VALUES;
+
+export const studioExpertise = EXPERTISE_DOMAINS;
+export const expertiseDomains = EXPERTISE_DOMAINS;
+export const expertise = EXPERTISE_DOMAINS;
+
+export const studioInfo = SITE_INFO;
+export const siteInfo = SITE_INFO;
+export const siteData = SITE_INFO;
 export default SITE_INFO;
