@@ -408,3 +408,10 @@ export const PROJECTS = PROJECTS_DATA;
 export const INITIAL_PROJECTS = PROJECTS_DATA;
 export const studioProjects = PROJECTS_DATA;
 export default PROJECTS_DATA;
+
+// Export aliases so any import works
+export const PROJECTS_DATA = (typeof projects !== 'undefined' ? projects : (typeof projectsData !== 'undefined' ? projectsData : []));
+export const projectsData = PROJECTS_DATA;
+export const projects = PROJECTS_DATA;
+export const PROJECTS = PROJECTS_DATA;
+export default PROJECTS_DATA;
