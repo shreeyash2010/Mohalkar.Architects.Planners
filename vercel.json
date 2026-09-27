@@ -1,10 +1,23 @@
 {
   "framework": "vite",
+  "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/googlef7f0f2c37f8462b5.html",
+      "destination": "/googlef7f0f2c37f8462b5.html"
+    },
+    {
+      "source": "/google:id.html",
+      "destination": "/google:id.html"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/((?!api/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
