@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MessageCircle, X, ArrowUpRight } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { HomeSection } from "./components/HomeSection";
@@ -258,6 +259,9 @@ export default function App() {
           <MessageCircle className="w-6 h-6 fill-current" />
         </button>
       </div>
+
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }
