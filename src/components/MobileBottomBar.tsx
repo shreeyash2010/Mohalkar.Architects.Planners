@@ -1,79 +1,72 @@
-import React from "react";
-import { Home, Grid, Sparkles, Layers, MessageSquare } from "lucide-react";
-import { useTheme } from "../context/ThemeContext";
+import React from 'react';
+import { Home, Layers, Building, Wrench, Send, Calculator } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 interface MobileBottomBarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  currentSection: string;
+  onNavigate: (section: string) => void;
+  onOpenEstimator: () => void;
 }
 
 export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
-  activeTab,
-  setActiveTab,
+  currentSection,
+  onNavigate,
+  onOpenEstimator
 }) => {
   const { isDark } = useTheme();
 
-  const tabs = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "projects", label: "Projects", icon: Grid },
-    { id: "expertise", label: "Expertise", icon: Sparkles },
-    { id: "services", label: "Services", icon: Layers },
-    { id: "enquiry", label: "Contact", icon: MessageSquare },
+  const items = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'projects', label: 'Projects', icon: Building },
+    { id: 'estimator', label: 'Estimate', icon: Calculator, isSpecial: true },
+    { id: 'services', label: 'Services', icon: Wrench },
+    { id: 'enquiry', label: 'Contact', icon: Send }
   ];
 
-  const handleSelect = (id: string) => {
-    setActiveTab(id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   return (
-    <nav
-      className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden px-2 py-2 safe-area-bottom shadow-2xl backdrop-blur-xl border-t transition-colors ${
+    <div
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-40 border-t transition-colors ${
         isDark
-          ? "bg-[#0a0c10]/95 border-[#252830]"
-          : "bg-white/95 border-[#e2e6ee] shadow-lg"
+          ? 'bg-[#0e0e10]/95 backdrop-blur-md border-neutral-800'
+          : 'bg-[#fbfaf8]/95 backdrop-blur-md border-neutral-200'
       }`}
-      aria-label="Mobile Navigation Dock"
     >
-      <div className="max-w-lg mx-auto flex items-center justify-around">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+      <div className="grid grid-cols-5 h-14">
+        {items.map(item => {
+          const Icon = item.icon;
+          const isActive = currentSection === item.id;
+
+          if (item.isSpecial) {
+            return (
+              <button
+                key={item.id}
+                onClick={onOpenEstimator}
+                className="flex flex-col items-center justify-center text-center cursor-pointer text-[#c8a96e]"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#c8a96e]/15 border border-[#c8a96e]/40 flex items-center justify-center mb-0.5">
+                  <Icon className="w-4 h-4" />
+                </div>
+                <span className="text-[9px] uppercase tracking-wider font-semibold">Estimate</span>
+              </button>
+            );
+          }
+
           return (
             <button
-              key={tab.id}
-              onClick={() => handleSelect(tab.id)}
-              className={`flex-1 py-1.5 flex flex-col items-center justify-center transition-all cursor-pointer rounded-lg relative ${
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className={`flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
                 isActive
-                  ? "text-[#c8a96e]"
-                  : isDark
-                  ? "text-neutral-400 hover:text-neutral-200"
-                  : "text-neutral-500 hover:text-neutral-900"
+                  ? 'text-[#c8a96e] font-semibold'
+                  : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100'
               }`}
             >
-              {isActive && (
-                <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-6 h-[2px] bg-[#c8a96e] rounded-full shadow-[0_0_8px_#c8a96e]" />
-              )}
-              <Icon
-                className={`w-5 h-5 transition-transform duration-200 ${
-                  isActive ? "scale-110" : ""
-                }`}
-              />
-              <span
-                className={`text-[10px] font-medium tracking-tight mt-1 ${
-                  isActive
-                    ? isDark
-                      ? "text-white font-semibold"
-                      : "text-neutral-900 font-semibold"
-                    : ""
-                }`}
-              >
-                {tab.label}
-              </span>
+              <Icon className="w-4 h-4 mb-0.5" />
+              <span className="text-[9px] uppercase tracking-wider">{item.label}</span>
             </button>
           );
         })}
       </div>
-    </nav>
+    </div>
   );
 };

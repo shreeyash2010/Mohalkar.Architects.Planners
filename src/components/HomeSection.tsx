@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { ArrowRight, ChevronRight, Sparkles } from "lucide-react";
 import { SITE_INFO, LEADERSHIP_PROFILES, CORE_VALUES } from "../data/siteData";
 import { useTheme } from "../context/ThemeContext";
@@ -265,8 +266,16 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {CORE_VALUES.map((val, idx) => (
-            <div
+            <motion.div
               key={idx}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{
+                duration: 0.5,
+                delay: (idx % 4) * 0.08,
+                ease: [0.22, 1, 0.36, 1],
+              }}
               className={`p-6 rounded-xl border transition-all space-y-3 ${
                 isDark
                   ? "border-[#252830] bg-[#12151c] hover:border-[#c8a96e]/40"
@@ -288,7 +297,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
               >
                 {val.description}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -316,9 +325,17 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {LEADERSHIP_PROFILES.map((leader) => (
-            <div
+          {LEADERSHIP_PROFILES.map((leader, idx) => (
+            <motion.div
               key={leader.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{
+                duration: 0.55,
+                delay: idx * 0.12,
+                ease: [0.22, 1, 0.36, 1],
+              }}
               onClick={() => onSelectLeader(leader.id)}
               className={`group p-6 rounded-xl border transition-all cursor-pointer shadow-lg space-y-4 ${
                 isDark
@@ -378,7 +395,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
                 <span>View Full Credentials &amp; Bio</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>

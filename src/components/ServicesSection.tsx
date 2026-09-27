@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   Compass,
   Building2,
@@ -90,8 +91,16 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ setActiveTab }
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="space-y-8">
           {SERVICES_LIST.map((svc: ServiceItem, idx: number) => (
-            <div
+            <motion.div
               key={svc.id}
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{
+                duration: 0.6,
+                delay: (idx % 4) * 0.1,
+                ease: [0.22, 1, 0.36, 1],
+              }}
               className={`p-6 sm:p-8 rounded-2xl border transition-all shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start group ${
                 isDark
                   ? "border-[#252830] bg-[#12151c] hover:border-[#c8a96e]/60"
@@ -213,7 +222,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ setActiveTab }
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>

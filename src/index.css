@@ -3,37 +3,15 @@
 @layer base {
   :root {
     --font-serif: 'Cormorant Garamond', Georgia, serif;
-    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
     --gold: #c8a96e;
-    --gold-light: #dfc085;
-    --gold-dark: #a8843e;
-    color-scheme: dark;
-  }
-
-  :root.light, [data-theme="light"], .light {
-    color-scheme: light;
-  }
-
-  html {
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-    -webkit-tap-highlight-color: transparent;
+    --gold-light: #dfc38d;
+    --gold-dark: #a38247;
   }
 
   body {
     font-family: var(--font-sans);
-    scroll-behavior: smooth;
-    background-color: #0c0e12;
-    color: #e2e4e8;
-    transition: background-color 0.25s ease, color 0.25s ease;
-    overflow-x: hidden;
-    touch-action: manipulation;
-  }
-
-  body.light, .light body, [data-theme="light"] body {
-    background-color: #f8f9fb;
-    color: #181a20;
   }
 
   h1, h2, h3, .font-serif {
@@ -45,239 +23,23 @@
   }
 }
 
-/* Safe area insets for modern mobile devices with gesture bars / notches */
-.safe-area-bottom {
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
-}
-
-.safe-area-top {
-  padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem));
-}
-
-/* Momentum touch scrolling for mobile & tablet cards/tables */
-.touch-scroll {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Subtle architectural blueprint grid */
-.bg-blueprint-grid {
-  background-size: 40px 40px;
-  background-image: 
-    linear-gradient(to right, rgba(200, 169, 110, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(200, 169, 110, 0.04) 1px, transparent 1px);
-}
-
-.light .bg-blueprint-grid, [data-theme="light"] .bg-blueprint-grid {
-  background-image: 
-    linear-gradient(to right, rgba(200, 169, 110, 0.12) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(200, 169, 110, 0.12) 1px, transparent 1px);
-}
-
-.bg-dot-grid {
-  background-size: 24px 24px;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-}
-
-.light .bg-dot-grid, [data-theme="light"] .bg-dot-grid {
-  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
-}
-
-/* Custom scrollbars */
+/* Custom subtle scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0c0e12;
+  background: transparent;
 }
-.light ::-webkit-scrollbar-track, [data-theme="light"] ::-webkit-scrollbar-track {
-  background: #f1f3f6;
-}
-
 ::-webkit-scrollbar-thumb {
-  background: #252830;
-  border-radius: 3px;
+  background: rgba(200, 169, 110, 0.25);
+  border-radius: 9999px;
 }
-.light ::-webkit-scrollbar-thumb, [data-theme="light"] ::-webkit-scrollbar-thumb {
-  background: #cbd2df;
-}
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #c8a96e;
+  background: rgba(200, 169, 110, 0.45);
 }
 
-/* ═══════════════════════════════════════════════════════
-   LIGHT MODE PALETTE & ADMINISTRATIVE CONTEXT INHERITANCE
-   ═══════════════════════════════════════════════════════ */
-
-/* Global canvas backgrounds in light mode */
-.light .bg-\[\#090b10\],
-.light .bg-\[\#080a0f\],
-.light .bg-\[\#0c0e12\],
-[data-theme="light"] .bg-\[\#090b10\],
-[data-theme="light"] .bg-\[\#080a0f\],
-[data-theme="light"] .bg-\[\#0c0e12\] {
-  background-color: #f8f9fb !important;
-}
-
-.light .bg-\[\#0e1118\],
-.light .bg-\[\#0e1118\]\/95,
-[data-theme="light"] .bg-\[\#0e1118\],
-[data-theme="light"] .bg-\[\#0e1118\]\/95 {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-}
-
-/* Cards & Administrative components in light mode */
-.light .bg-\[\#12151e\],
-.light .bg-\[\#12151f\],
-.light .bg-\[\#12151c\],
-.light .bg-\[\#141720\],
-.light .bg-\[\#141824\],
-.light .bg-\[\#161a24\],
-.light .bg-\[\#11141c\],
-.light .bg-\[\#101318\],
-[data-theme="light"] .bg-\[\#12151e\],
-[data-theme="light"] .bg-\[\#12151f\],
-[data-theme="light"] .bg-\[\#12151c\],
-[data-theme="light"] .bg-\[\#141720\],
-[data-theme="light"] .bg-\[\#141824\],
-[data-theme="light"] .bg-\[\#161a24\],
-[data-theme="light"] .bg-\[\#11141c\],
-[data-theme="light"] .bg-\[\#101318\] {
-  background-color: #ffffff !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-}
-
-/* Sub-containers, elevated pills, secondary surfaces in light mode */
-.light .bg-\[\#181d28\],
-.light .bg-\[\#161a22\],
-.light .bg-\[\#1a1e2b\],
-.light .bg-\[\#1b202c\],
-.light .bg-\[\#1c2130\],
-.light .bg-\[\#1f2430\],
-.light .bg-\[\#181c24\],
-.light .bg-\[\#181c26\],
-.light .bg-\[\#131622\],
-.light .bg-\[\#1f2433\],
-[data-theme="light"] .bg-\[\#181d28\],
-[data-theme="light"] .bg-\[\#161a22\],
-[data-theme="light"] .bg-\[\#1a1e2b\],
-[data-theme="light"] .bg-\[\#1b202c\],
-[data-theme="light"] .bg-\[\#1c2130\],
-[data-theme="light"] .bg-\[\#1f2430\],
-[data-theme="light"] .bg-\[\#181c24\],
-[data-theme="light"] .bg-\[\#181c26\],
-[data-theme="light"] .bg-\[\#131622\],
-[data-theme="light"] .bg-\[\#1f2433\] {
-  background-color: #f4f6fa !important;
-}
-
-/* Inputs, table sub-rows, code previews in light mode */
-.light .bg-\[\#0d0f15\],
-.light .bg-\[\#0d1017\],
-.light .bg-\[\#0b0d13\],
-.light .bg-\[\#0b0e14\],
-.light .bg-\[\#090b0e\],
-[data-theme="light"] .bg-\[\#0d0f15\],
-[data-theme="light"] .bg-\[\#0d1017\],
-[data-theme="light"] .bg-\[\#0b0d13\],
-[data-theme="light"] .bg-\[\#0b0e14\],
-[data-theme="light"] .bg-\[\#090b0e\] {
-  background-color: #f8f9fc !important;
-}
-
-/* Borders in light mode */
-.light .border-\[\#252830\],
-.light .border-\[\#252835\],
-.light .border-\[\#232734\],
-.light .border-\[\#1e2330\],
-.light .border-\[\#1e232d\],
-.light .border-\[\#272b38\],
-.light .border-\[\#242838\],
-.light .border-\[\#1e2229\],
-.light .border-\[\#202430\],
-.light .border-\[\#202432\],
-.light .border-\[\#1d222e\],
-.light .border-\[\#2f3545\],
-.light .border-\[\#2c3140\],
-.light .border-\[\#2b3140\],
-.light .border-\[\#222738\],
-.light .border-\[\#252936\],
-.light .border-\[\#262b3a\],
-.light .border-\[\#242938\],
-.light .border-\[\#1e232f\],
-.light .border-\[\#202530\],
-.light .border-\[\#222733\],
-.light .border-\[\#2a2f3a\],
-.light .border-\[\#2f3542\],
-[data-theme="light"] .border-\[\#252830\],
-[data-theme="light"] .border-\[\#252835\],
-[data-theme="light"] .border-\[\#232734\],
-[data-theme="light"] .border-\[\#1e2330\],
-[data-theme="light"] .border-\[\#1e232d\],
-[data-theme="light"] .border-\[\#272b38\],
-[data-theme="light"] .border-\[\#242838\],
-[data-theme="light"] .border-\[\#1e2229\],
-[data-theme="light"] .border-\[\#202430\],
-[data-theme="light"] .border-\[\#202432\],
-[data-theme="light"] .border-\[\#1d222e\],
-[data-theme="light"] .border-\[\#2f3545\],
-[data-theme="light"] .border-\[\#2c3140\],
-[data-theme="light"] .border-\[\#2b3140\],
-[data-theme="light"] .border-\[\#222738\],
-[data-theme="light"] .border-\[\#252936\],
-[data-theme="light"] .border-\[\#262b3a\],
-[data-theme="light"] .border-\[\#242938\],
-[data-theme="light"] .border-\[\#1e232f\],
-[data-theme="light"] .border-\[\#202530\],
-[data-theme="light"] .border-\[\#222733\],
-[data-theme="light"] .border-\[\#2a2f3a\],
-[data-theme="light"] .border-\[\#2f3542\] {
-  border-color: #e2e6ef !important;
-}
-
-/* Invert text colors for readability in light mode */
-.light .text-white,
-[data-theme="light"] .text-white {
-  color: #111827 !important;
-}
-
-.light .text-\[\#e2e4e8\],
-.light .text-\[\#e8eaed\],
-.light .text-neutral-200,
-.light .text-neutral-300,
-[data-theme="light"] .text-\[\#e2e4e8\],
-[data-theme="light"] .text-\[\#e8eaed\],
-[data-theme="light"] .text-neutral-200,
-[data-theme="light"] .text-neutral-300 {
-  color: #374151 !important;
-}
-
-.light .text-neutral-400,
-[data-theme="light"] .text-neutral-400 {
-  color: #4b5563 !important;
-}
-
-.light .text-neutral-500,
-[data-theme="light"] .text-neutral-500 {
-  color: #6b7280 !important;
-}
-
-/* Exceptions: Preserve contrast on gold CTA buttons and WhatsApp buttons */
-.light .bg-\[\#c8a96e\] .text-\[\#0c0e12\],
-.light button.bg-\[\#c8a96e\],
-.light .bg-\[\#25d366\],
-[data-theme="light"] .bg-\[\#c8a96e\] .text-\[\#0c0e12\],
-[data-theme="light"] button.bg-\[\#c8a96e\],
-[data-theme="light"] .bg-\[\#25d366\] {
-  color: #0c0e12 !important;
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
 }

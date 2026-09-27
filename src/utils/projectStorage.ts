@@ -8,6 +8,8 @@ import {
   MOCK_VIEWER_INSIGHTS,
   AdminActivity,
   INITIAL_ADMIN_ACTIVITIES,
+  AdminUser,
+  INITIAL_ADMIN_USERS,
 } from "../data/adminData";
 
 const STORAGE_PUBLISHED_KEY = "mohalkar_published_projects_v5";
@@ -611,11 +613,219 @@ export const restoreDefaultActivities = (): boolean => {
 };
 
 // ==========================================
-// ADMIN SECURITY & PASSCODE MANAGEMENT
+// MULTI-ADMIN USERS & SECURITY MANAGEMENT
 // ==========================================
+const STORAGE_ADMIN_USERS_KEY = "mohalkar_admin_users_v3";
 const STORAGE_ADMIN_PASSWORD_KEY = "mohalkar_admin_passcode_v2";
+const STORAGE_CURRENT_USER_SESSION_KEY = "mohalkar_current_admin_user_v1";
 const DEFAULT_INITIAL_PASSCODE = "mohalkar2026";
 
+/**
+ * Get all registered admin users with their distinct credentials and passwords
+ */
+export const getAdminUsers = (): AdminUser[] => {
+  try {
+    const stored = safeGetItem(STORAGE_ADMIN_USERS_KEY);
+    if (stored) {
+      const parsed: AdminUser[] = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn("Error reading admin users from storage:", e);
+  }
+  return INITIAL_ADMIN_USERS;
+};
+
+/**
+ * Save updated list of admin users
+ */
+export const saveAdminUsers = (users: AdminUser[]): boolean => {
+  try {
+    safeSetItem(STORAGE_ADMIN_USERS_KEY, JSON.stringify(users));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("mohalkar:admin-users-updated"));
+    }
+    return true;
+  } catch (e) {
+    console.error("Error saving admin users:", e);
+    return false;
+  }
+};
+
+/**
+ * Add a new admin user with their unique individual password and role
+ */
+export const addAdminUser = (
+  userData: Omit<AdminUser, "id" | "createdAt" | "status"> & { status?: "active" | "suspended" }
+): AdminUser => {
+  const users = getAdminUsers();
+  
+  // Assign avatar background colors
+  const avatarColors = [
+    "bg-amber-500/20 text-amber-400 border-amber-500/40",
+    "bg-blue-500/20 text-blue-400 border-blue-500/40",
+    "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    "bg-purple-500/20 text-purple-400 border-purple-500/40",
+    "bg-rose-500/20 text-rose-400 border-rose-500/40",
+    "bg-cyan-500/20 text-cyan-400 border-cyan-500/40",
+  ];
+  const color = userData.avatarColor || avatarColors[users.length % avatarColors.length];
+
+  const newUser: AdminUser = {
+    id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    name: userData.name.trim(),
+    username: userData.username.trim().toLowerCase().replace(/\s+/g, ""),
+    password: userData.password.trim(),
+    role: userData.role,
+    accessLevel: userData.accessLevel || "Project Manager",
+    email: userData.email?.trim(),
+    phone: userData.phone?.trim(),
+    avatarColor: color,
+    status: userData.status || "active",
+    createdAt: Date.now(),
+    isDefault: false,
+  };
+
+  const updated = [newUser, ...users];
+  saveAdminUsers(updated);
+  return newUser;
+};
+
+/**
+ * Update an existing admin user's details or individual password
+ */
+export const updateAdminUser = (id: string, updates: Partial<AdminUser>): boolean => {
+  const users = getAdminUsers();
+  const index = users.findIndex((u) => u.id === id);
+  if (index === -1) return false;
+
+  const existing = users[index];
+  users[index] = {
+    ...existing,
+    ...updates,
+    name: updates.name ? updates.name.trim() : existing.name,
+    username: updates.username ? updates.username.trim().toLowerCase().replace(/\s+/g, "") : existing.username,
+    password: updates.password !== undefined && updates.password.trim().length > 0 ? updates.password.trim() : existing.password,
+  };
+
+  // If updating current active session user, sync session storage
+  const currentSession = getCurrentAdminUser();
+  if (currentSession && currentSession.id === id) {
+    setCurrentAdminUser(users[index]);
+  }
+
+  saveAdminUsers(users);
+  return true;
+};
+
+/**
+ * Delete an admin user (prevents deleting the last super admin)
+ */
+export const deleteAdminUser = (id: string): { success: boolean; message: string } => {
+  const users = getAdminUsers();
+  if (users.length <= 1) {
+    return { success: false, message: "Cannot delete the last remaining studio admin user." };
+  }
+
+  const userToDelete = users.find((u) => u.id === id);
+  if (!userToDelete) {
+    return { success: false, message: "Admin user not found." };
+  }
+
+  const superAdmins = users.filter((u) => u.accessLevel === "Super Admin" && u.status === "active");
+  if (userToDelete.accessLevel === "Super Admin" && superAdmins.length <= 1) {
+    return { success: false, message: "Cannot delete the only active Super Admin account." };
+  }
+
+  const updated = users.filter((u) => u.id !== id);
+  saveAdminUsers(updated);
+  return { success: true, message: `Admin user "${userToDelete.name}" removed successfully.` };
+};
+
+/**
+ * Verify user credentials (supports username+password OR direct unique password matching)
+ */
+export const verifyAdminUserCredentials = (
+  usernameOrId: string,
+  passwordInput: string
+): AdminUser | null => {
+  const users = getAdminUsers();
+  const trimmedPassword = (passwordInput || "").trim();
+  const trimmedUser = (usernameOrId || "").trim().toLowerCase();
+
+  if (!trimmedPassword) return null;
+
+  // 1. If username is specified, find that specific active user
+  if (trimmedUser) {
+    const user = users.find(
+      (u) =>
+        u.status === "active" &&
+        (u.username.toLowerCase() === trimmedUser || u.id === usernameOrId || (u.email && u.email.toLowerCase() === trimmedUser))
+    );
+    if (user && user.password === trimmedPassword) {
+      // Record last login timestamp
+      updateAdminUser(user.id, { lastLogin: Date.now() });
+      return user;
+    }
+  }
+
+  // 2. Direct password match across any active admin user
+  const matchingUser = users.find((u) => u.status === "active" && u.password === trimmedPassword);
+  if (matchingUser) {
+    updateAdminUser(matchingUser.id, { lastLogin: Date.now() });
+    return matchingUser;
+  }
+
+  // 3. Fallback to legacy single master passcode
+  const legacyMaster = getAdminPassword();
+  if (trimmedPassword === legacyMaster) {
+    const primaryAdmin = users.find((u) => u.isDefault) || users[0] || INITIAL_ADMIN_USERS[0];
+    return primaryAdmin;
+  }
+
+  return null;
+};
+
+/**
+ * Get current active admin user session
+ */
+export const getCurrentAdminUser = (): AdminUser | null => {
+  try {
+    if (typeof window !== "undefined" && window.sessionStorage) {
+      const stored = sessionStorage.getItem(STORAGE_CURRENT_USER_SESSION_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    }
+  } catch (e) {
+    console.warn("Error reading current user session:", e);
+  }
+  const users = getAdminUsers();
+  return users.find((u) => u.isDefault) || users[0] || null;
+};
+
+/**
+ * Set current active admin user session
+ */
+export const setCurrentAdminUser = (user: AdminUser | null): void => {
+  try {
+    if (typeof window !== "undefined" && window.sessionStorage) {
+      if (user) {
+        sessionStorage.setItem(STORAGE_CURRENT_USER_SESSION_KEY, JSON.stringify(user));
+      } else {
+        sessionStorage.removeItem(STORAGE_CURRENT_USER_SESSION_KEY);
+      }
+    }
+  } catch (e) {
+    console.warn("Error setting current user session:", e);
+  }
+};
+
+// ==========================================
+// LEGACY COMPATIBILITY HELPER WRAPPERS
+// ==========================================
 export const getAdminPassword = (): string => {
   try {
     const stored = safeGetItem(STORAGE_ADMIN_PASSWORD_KEY);
@@ -629,9 +839,8 @@ export const getAdminPassword = (): string => {
 };
 
 export const verifyAdminPassword = (input: string): boolean => {
-  const current = getAdminPassword();
-  const trimmed = (input || "").trim();
-  return trimmed === current;
+  const user = verifyAdminUserCredentials("", input);
+  return !!user;
 };
 
 export const saveAdminPassword = (newPassword: string): boolean => {
@@ -640,6 +849,14 @@ export const saveAdminPassword = (newPassword: string): boolean => {
       return false;
     }
     safeSetItem(STORAGE_ADMIN_PASSWORD_KEY, newPassword.trim());
+    
+    // Also update primary/default admin user password
+    const users = getAdminUsers();
+    const primary = users.find((u) => u.isDefault) || users[0];
+    if (primary) {
+      updateAdminUser(primary.id, { password: newPassword.trim() });
+    }
+
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("mohalkar:password-updated"));
     }

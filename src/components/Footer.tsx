@@ -21,7 +21,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
 
   return (
     <footer
-      className={`relative pt-16 pb-12 transition-colors border-t ${
+      className={`relative pt-16 pb-32 sm:pb-36 lg:pb-14 transition-colors border-t z-10 ${
         isDark
           ? "bg-[#08090c] border-[#1e2229] text-[#9ca3af]"
           : "bg-[#eef1f6] border-[#dce2ec] text-[#4b5563]"
@@ -29,7 +29,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
-          className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 pb-16 border-b ${
+          className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 pb-12 sm:pb-16 border-b ${
             isDark ? "border-[#1e2229]" : "border-[#dce2ec]"
           }`}
         >
@@ -39,10 +39,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <img
                 src="/images/logo2.png"
                 alt="Mohalkar Logo"
-                className={`w-9 h-9 object-contain border rounded p-0.5 ${
+                className={`w-10 h-10 object-contain border rounded p-0.5 ${
                   isDark
                     ? "border-[#c8a96e]/30 bg-[#161a22]"
-                    : "border-[#c8a96e]/40 bg-white"
+                    : "border-[#c8a96e]/40 bg-white shadow-sm"
                 }`}
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = "/images/logo.jpg";
@@ -50,7 +50,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               />
               <div>
                 <span
-                  className={`font-serif text-xl font-bold tracking-wider ${
+                  className={`font-serif text-xl sm:text-2xl font-bold tracking-wider ${
                     isDark ? "text-white" : "text-neutral-900"
                   }`}
                 >
@@ -62,7 +62,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </div>
             </div>
             <p
-              className={`text-xs leading-relaxed max-w-sm ${
+              className={`text-xs sm:text-[13px] leading-relaxed max-w-sm ${
                 isDark ? "text-[#9ca3af]" : "text-[#4b5563]"
               }`}
             >
@@ -75,10 +75,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                 href={SITE_INFO.contacts.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-8 h-8 rounded border flex items-center justify-center hover:text-[#c8a96e] hover:border-[#c8a96e] transition-colors ${
+                className={`w-10 h-10 rounded-lg border flex items-center justify-center hover:text-[#c8a96e] hover:border-[#c8a96e] active:scale-95 transition-all touch-manipulation ${
                   isDark
-                    ? "border-[#252830] text-neutral-400 bg-[#12151c]"
-                    : "border-[#d8dde6] text-neutral-600 bg-white shadow-sm"
+                    ? "border-[#252830] text-neutral-300 bg-[#12151c] hover:bg-[#1a1e27]"
+                    : "border-[#d8dde6] text-neutral-700 bg-white hover:bg-neutral-50 shadow-sm"
                 }`}
                 aria-label="Instagram Profile"
               >
@@ -88,10 +88,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                 href={SITE_INFO.contacts.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-8 h-8 rounded border flex items-center justify-center hover:text-[#c8a96e] hover:border-[#c8a96e] transition-colors ${
+                className={`w-10 h-10 rounded-lg border flex items-center justify-center hover:text-[#c8a96e] hover:border-[#c8a96e] active:scale-95 transition-all touch-manipulation ${
                   isDark
-                    ? "border-[#252830] text-neutral-400 bg-[#12151c]"
-                    : "border-[#d8dde6] text-neutral-600 bg-white shadow-sm"
+                    ? "border-[#252830] text-neutral-300 bg-[#12151c] hover:bg-[#1a1e27]"
+                    : "border-[#d8dde6] text-neutral-700 bg-white hover:bg-neutral-50 shadow-sm"
                 }`}
                 aria-label="LinkedIn Profile"
               >
@@ -99,10 +99,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </a>
               <a
                 href={`mailto:${SITE_INFO.contacts.emailPrimary}`}
-                className={`w-8 h-8 rounded border flex items-center justify-center hover:text-[#c8a96e] hover:border-[#c8a96e] transition-colors ${
+                className={`w-10 h-10 rounded-lg border flex items-center justify-center hover:text-[#c8a96e] hover:border-[#c8a96e] active:scale-95 transition-all touch-manipulation ${
                   isDark
-                    ? "border-[#252830] text-neutral-400 bg-[#12151c]"
-                    : "border-[#d8dde6] text-neutral-600 bg-white shadow-sm"
+                    ? "border-[#252830] text-neutral-300 bg-[#12151c] hover:bg-[#1a1e27]"
+                    : "border-[#d8dde6] text-neutral-700 bg-white hover:bg-neutral-50 shadow-sm"
                 }`}
                 aria-label="Email Studio"
               >
@@ -112,10 +112,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                 href={SITE_INFO.contacts.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-8 h-8 rounded border flex items-center justify-center hover:text-emerald-500 hover:border-emerald-500 transition-colors ${
+                className={`w-10 h-10 rounded-lg border flex items-center justify-center hover:text-emerald-500 hover:border-emerald-500 active:scale-95 transition-all touch-manipulation ${
                   isDark
-                    ? "border-[#252830] text-neutral-400 bg-[#12151c]"
-                    : "border-[#d8dde6] text-neutral-600 bg-white shadow-sm"
+                    ? "border-[#252830] text-neutral-300 bg-[#12151c] hover:bg-[#1a1e27]"
+                    : "border-[#d8dde6] text-neutral-700 bg-white hover:bg-neutral-50 shadow-sm"
                 }`}
                 aria-label="WhatsApp"
               >
@@ -129,12 +129,13 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
             <p className="text-xs uppercase tracking-widest text-[#c8a96e] font-semibold">
               Navigation
             </p>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-1 sm:space-y-1.5 text-xs sm:text-[13px]">
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("home")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Home Overview
@@ -142,9 +143,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("about")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   About the Studio
@@ -152,9 +154,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("expertise")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Practice Expertise
@@ -162,9 +165,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("services")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Scope of Services
@@ -172,9 +176,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("projects")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Project Portfolio
@@ -182,9 +187,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("enquiry")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Start Project Enquiry
@@ -198,12 +204,13 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
             <p className="text-xs uppercase tracking-widest text-[#c8a96e] font-semibold">
               Disciplines
             </p>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-1 sm:space-y-1.5 text-xs sm:text-[13px]">
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("expertise")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Residential Architecture
@@ -211,9 +218,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("expertise")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Commercial &amp; Shopping Complex Design
@@ -221,9 +229,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("expertise")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Interior Architecture &amp; Joinery
@@ -231,9 +240,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("expertise")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Urban Planning &amp; Precincts
@@ -241,9 +251,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("expertise")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Landscape &amp; Public Parks
@@ -251,9 +262,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigateTo("services")}
-                  className={`transition-colors cursor-pointer text-left ${
-                    isDark ? "hover:text-white text-[#9ca3af]" : "hover:text-black text-[#4b5563]"
+                  className={`w-full text-left py-1.5 px-1 -mx-1 rounded transition-all cursor-pointer touch-manipulation flex items-center ${
+                    isDark ? "hover:text-white text-[#9ca3af] active:text-[#c8a96e]" : "hover:text-black text-[#4b5563] active:text-[#c8a96e]"
                   }`}
                 >
                   Statutory Municipal Sanctions
@@ -267,38 +279,38 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
             <p className="text-xs uppercase tracking-widest text-[#c8a96e] font-semibold">
               Contact &amp; Studios
             </p>
-            <div className="space-y-2.5 text-xs">
-              <div className="flex items-start gap-2.5">
+            <div className="space-y-3 text-xs sm:text-[13px]">
+              <div className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-[#c8a96e] shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   <a
                     href={`tel:${SITE_INFO.contacts.phonePrimary}`}
-                    className={`block ${isDark ? "hover:text-white" : "hover:text-black font-medium text-neutral-800"}`}
+                    className={`block py-0.5 touch-manipulation ${isDark ? "hover:text-white" : "hover:text-black font-medium text-neutral-800"}`}
                   >
                     {SITE_INFO.contacts.phonePrimary}
                   </a>
                   <a
                     href={`tel:${SITE_INFO.contacts.phoneSecondary}`}
-                    className={`block ${isDark ? "hover:text-white" : "hover:text-black"}`}
+                    className={`block py-0.5 touch-manipulation ${isDark ? "hover:text-white" : "hover:text-black"}`}
                   >
                     {SITE_INFO.contacts.phoneSecondary}
                   </a>
                 </div>
               </div>
 
-              <div className="flex items-start gap-2.5">
+              <div className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-[#c8a96e] shrink-0 mt-0.5" />
                 <a
                   href={`mailto:${SITE_INFO.contacts.emailPrimary}`}
-                  className={`hover:text-[#c8a96e] break-all ${isDark ? "text-[#9ca3af]" : "text-[#4b5563]"}`}
+                  className={`hover:text-[#c8a96e] break-all py-0.5 touch-manipulation ${isDark ? "text-[#9ca3af]" : "text-[#4b5563]"}`}
                 >
                   {SITE_INFO.contacts.emailPrimary}
                 </a>
               </div>
 
-              <div className="flex items-start gap-2.5">
+              <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-[#c8a96e] shrink-0 mt-0.5" />
-                <span>{SITE_INFO.contacts.location}</span>
+                <span className="leading-relaxed">{SITE_INFO.contacts.location}</span>
               </div>
             </div>
           </div>
@@ -306,39 +318,51 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
 
         {/* Bottom Bar */}
         <div
-          className={`pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] ${
+          className={`pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs ${
             isDark ? "text-[#787f8d]" : "text-[#6b7280]"
           }`}
         >
-          <div className="text-center sm:text-left">
+          <div className="text-center md:text-left leading-relaxed">
             &copy; 2026 <strong className={isDark ? "text-neutral-300" : "text-neutral-900"}>Abhishek Mohalkar</strong> · Mohalkar Architects &amp; Planners. All rights reserved.
           </div>
-          <div className="flex items-center gap-4 sm:gap-6 flex-wrap justify-center">
-            <span className="inline-flex items-center gap-1.5">
+
+          <div className="flex items-center gap-3 sm:gap-5 flex-wrap justify-center">
+            <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs">
               Designed by{" "}
-              <span className="text-[#c8a96e] font-semibold tracking-wide hover:text-[#dfc085] transition-colors">
+              <span className="text-[#c8a96e] font-medium tracking-wide">
                 Mali Studio&apos;s
               </span>
             </span>
-            <span className={isDark ? "text-neutral-700 hidden sm:inline" : "text-neutral-300 hidden sm:inline"}>
+
+            <span className={isDark ? "text-neutral-800 hidden sm:inline" : "text-neutral-300 hidden sm:inline"}>
               |
             </span>
+
+            {/* Studio Control - discreet, non-highlighted, comfortable touch target */}
             <button
+              type="button"
               onClick={() => navigateTo("admin")}
-              className={`flex items-center gap-1.5 transition-colors cursor-pointer ${
-                isDark ? "text-neutral-500 hover:text-[#c8a96e]" : "text-neutral-600 hover:text-black"
+              className={`inline-flex items-center gap-1.5 py-2 px-2.5 rounded transition-colors cursor-pointer touch-manipulation ${
+                isDark
+                  ? "text-neutral-500 hover:text-neutral-300 active:text-white"
+                  : "text-neutral-500 hover:text-neutral-800 active:text-black"
               }`}
               title="Mohalkar Studio Executive Console"
             >
-              <Lock className="w-3 h-3 text-[#c8a96e]" />
-              <span>Studio Portal</span>
+              <Lock className="w-3 h-3 opacity-70" />
+              <span>Studio Control</span>
             </button>
-            <span className={isDark ? "text-neutral-700 hidden sm:inline" : "text-neutral-300 hidden sm:inline"}>
+
+            <span className={isDark ? "text-neutral-800 hidden sm:inline" : "text-neutral-300 hidden sm:inline"}>
               |
             </span>
+
             <button
+              type="button"
               onClick={scrollToTop}
-              className="flex items-center gap-1.5 text-[#c8a96e] hover:underline transition-colors cursor-pointer font-medium"
+              className={`inline-flex items-center gap-1 py-2 px-2.5 rounded transition-colors cursor-pointer touch-manipulation ${
+                isDark ? "text-neutral-400 hover:text-[#c8a96e]" : "text-neutral-600 hover:text-neutral-900"
+              }`}
               title="Return to top of page"
             >
               <span>Back to Top</span>

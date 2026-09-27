@@ -270,7 +270,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               href={SITE_INFO.contacts.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider text-black bg-[#25d366] hover:bg-[#20ba59] rounded-md transition-colors shadow-lg"
+              className="w-full flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider text-black bg-[#25d366] hover:bg-[#20ba59] rounded-md transition-colors shadow-lg active:scale-95 touch-manipulation"
             >
               <MessageCircle className="w-4 h-4" />
               Direct WhatsApp with Abhishek Mohalkar

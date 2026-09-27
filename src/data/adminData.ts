@@ -241,7 +241,70 @@ export type ActivityActionType =
   | "unpublish"
   | "edit"
   | "enquiry"
-  | "analytics";
+  | "analytics"
+  | "user";
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  username: string;
+  password: string; // Individual custom password / passcode
+  role: "Principal Architect" | "Associate Architect" | "Studio Manager" | "Project Lead" | "Draftsman / Visualizer" | "Editor" | "Viewer";
+  accessLevel: "Super Admin" | "Project Manager" | "Enquiry & Telemetry Manager" | "Read Only";
+  email?: string;
+  phone?: string;
+  avatarColor?: string;
+  status: "active" | "suspended";
+  createdAt: number;
+  lastLogin?: number;
+  isDefault?: boolean;
+}
+
+export const INITIAL_ADMIN_USERS: AdminUser[] = [
+  {
+    id: "usr-abhishek",
+    name: "Ar. Abhishek Mohalkar",
+    username: "abhishek",
+    password: "mohalkar2026",
+    role: "Principal Architect",
+    accessLevel: "Super Admin",
+    email: "abhishekmohalkar.1996@gmail.com",
+    phone: "+91 86002 62688",
+    avatarColor: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+    status: "active",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 60, // 60 days ago
+    lastLogin: Date.now() - 1000 * 60 * 15,
+    isDefault: true,
+  },
+  {
+    id: "usr-shreeyash",
+    name: "Shreeyash Mali",
+    username: "shreeyash",
+    password: "mali2026",
+    role: "Associate Architect",
+    accessLevel: "Super Admin",
+    email: "shreeyash.mali.in@gmail.com",
+    avatarColor: "bg-blue-500/20 text-blue-400 border-blue-500/40",
+    status: "active",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 30,
+    lastLogin: Date.now() - 1000 * 60 * 60 * 2,
+    isDefault: false,
+  },
+  {
+    id: "usr-manager",
+    name: "Studio Operations Lead",
+    username: "manager",
+    password: "studio2026",
+    role: "Studio Manager",
+    accessLevel: "Project Manager",
+    email: "studio@mohalkar.com",
+    avatarColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    status: "active",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 15,
+    lastLogin: Date.now() - 1000 * 60 * 60 * 8,
+    isDefault: false,
+  },
+];
 
 export interface AdminActivity {
   id: string;

@@ -56,7 +56,14 @@ import {
   KeyRound,
   Key,
   EyeOff,
-  Save
+  Save,
+  UserPlus,
+  UserCheck,
+  UserX,
+  UserCog,
+  Copy,
+  Shield,
+  BadgeCheck
 } from "lucide-react";
 import { ProjectItem, PROJECT_CATEGORIES, PROJECTS_DATA } from "../data/projectsData";
 import {
@@ -65,7 +72,8 @@ import {
   ClientEnquiry,
   MOCK_VIEWER_INSIGHTS,
   AdminActivity,
-  ActivityActionType
+  ActivityActionType,
+  AdminUser
 } from "../data/adminData";
 import {
   getWorkingProjects,
@@ -89,7 +97,15 @@ import {
   restoreDefaultActivities,
   getAdminPassword,
   verifyAdminPassword,
-  saveAdminPassword
+  saveAdminPassword,
+  getAdminUsers,
+  saveAdminUsers,
+  addAdminUser,
+  updateAdminUser,
+  deleteAdminUser,
+  verifyAdminUserCredentials,
+  getCurrentAdminUser,
+  setCurrentAdminUser
 } from "../utils/projectStorage";
 import { compressImageFile, compressMultipleImageFiles } from "../utils/imageCompressor";
 import { SITE_INFO } from "../data/siteData";
@@ -133,8 +149,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   // Active top navigation tab
   const [activeTab, setActiveTab] = useState<
-    "projects" | "insights" | "enquiries" | "activity" | "properties" | "security"
+    "projects" | "insights" | "enquiries" | "activity" | "properties" | "security" | "users"
   >("projects");
+
+  // Multi-Admin Users state
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(() => getAdminUsers());
+  const [currentAdminUser, setCurrentAdminUserState] = useState<AdminUser | null>(() => getCurrentAdminUser());
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState<boolean>(false);
+  const [editingAdminUser, setEditingAdminUser] = useState<AdminUser | null>(null);
+  const [userToDeleteModal, setUserToDeleteModal] = useState<AdminUser | null>(null);
+  const [showUserPasswords, setShowUserPasswords] = useState<Record<string, boolean>>({});
+  const [selectedLoginUserId, setSelectedLoginUserId] = useState<string>("");
+  const [loginUsernameInput, setLoginUsernameInput] = useState<string>("");
+
+  // User Form State for Adding / Editing
+  const [userForm, setUserForm] = useState<{
+    name: string;
+    username: string;
+    password: string;
+    role: AdminUser["role"];
+    accessLevel: AdminUser["accessLevel"];
+    email: string;
+    phone: string;
+    status: "active" | "suspended";
+  }>({
+    name: "",
+    username: "",
+    password: "",
+    role: "Associate Architect",
+    accessLevel: "Project Manager",
+    email: "",
+    phone: "",
+    status: "active",
+  });
 
   // Change Password state
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState<boolean>(false);
@@ -144,6 +191,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [passwordChangeError, setPasswordChangeError] = useState<string>("");
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string>("");
   const [showPasswordText, setShowPasswordText] = useState<boolean>(false);
+
+  // Helper to generate a memorable secure password
+  const generateSuggestedPassword = (): string => {
+    const prefixes = ["mohalkar", "studio", "arch", "design", "pune", "bhoom"];
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `${randomPrefix}${randomNum}`;
+  };
 
   // Activity Feed & Audit Trail state
   const [activities, setActivities] = useState<AdminActivity[]>(() => getAdminActivities());
@@ -230,6 +285,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const freshAnalytics = getStudioAnalytics();
     setAnalytics(freshAnalytics);
     setActivities(getAdminActivities());
+    setAdminUsers(getAdminUsers());
+    setCurrentAdminUserState(getCurrentAdminUser());
   };
 
   useEffect(() => {
@@ -239,11 +296,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     window.addEventListener("mohalkar:analytics-updated", handleUpdate);
     window.addEventListener("mohalkar:enquiries-updated", handleUpdate);
     window.addEventListener("mohalkar:activities-updated", handleUpdate);
+    window.addEventListener("mohalkar:admin-users-updated", handleUpdate);
     return () => {
       window.removeEventListener("mohalkar:projects-updated", handleUpdate);
       window.removeEventListener("mohalkar:analytics-updated", handleUpdate);
       window.removeEventListener("mohalkar:enquiries-updated", handleUpdate);
       window.removeEventListener("mohalkar:activities-updated", handleUpdate);
+      window.removeEventListener("mohalkar:admin-users-updated", handleUpdate);
     };
   }, []);
 
@@ -359,22 +418,204 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     showToast("Sample demo client enquiries restored.");
   };
 
-  // Authenticate handler
+  // Authenticate handler supporting multi-admin accounts with individual passwords
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (verifyAdminPassword(pinInput)) {
+    const identifier = loginUsernameInput.trim() || selectedLoginUserId;
+    const authenticatedUser = verifyAdminUserCredentials(identifier, pinInput);
+
+    if (authenticatedUser) {
       sessionStorage.setItem("mohalkar_admin_auth", "true");
+      setCurrentAdminUser(authenticatedUser);
+      setCurrentAdminUserState(authenticatedUser);
       setIsAuthenticated(true);
       setPinError("");
-      showToast("Welcome Principal Architect Abhishek Mohalkar. Studio Console unlocked.");
+      showToast(`Welcome ${authenticatedUser.name} (${authenticatedUser.role}). Studio Console unlocked.`);
+      logAdminActivity({
+        type: "user",
+        title: "Admin Console Unlocked",
+        description: `${authenticatedUser.name} (${authenticatedUser.role}) logged in successfully.`,
+        actor: authenticatedUser.name,
+      });
     } else {
-      setPinError("Invalid Studio Passcode. Please check your credentials.");
+      setPinError(
+        identifier
+          ? `Invalid passcode for "${identifier}". Please verify your credentials.`
+          : "Invalid Studio Passcode. Please check your credentials."
+      );
     }
   };
 
   const handleLogout = () => {
+    if (currentAdminUser) {
+      logAdminActivity({
+        type: "user",
+        title: "Admin Console Locked",
+        description: `${currentAdminUser.name} logged out.`,
+        actor: currentAdminUser.name,
+      });
+    }
     sessionStorage.removeItem("mohalkar_admin_auth");
+    setCurrentAdminUser(null);
+    setCurrentAdminUserState(null);
     setIsAuthenticated(false);
+  };
+
+  // Open Add Admin User Modal
+  const handleOpenAddUserModal = () => {
+    setUserForm({
+      name: "",
+      username: "",
+      password: generateSuggestedPassword(),
+      role: "Associate Architect",
+      accessLevel: "Project Manager",
+      email: "",
+      phone: "",
+      status: "active",
+    });
+    setIsAddUserModalOpen(true);
+  };
+
+  // Create new Admin User with custom password
+  const handleCreateAdminUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userForm.name.trim()) {
+      showToast("Please enter the user's full name.", "info");
+      return;
+    }
+    const cleanUsername = userForm.username.trim().toLowerCase().replace(/\s+/g, "");
+    if (!cleanUsername) {
+      showToast("Please enter a username.", "info");
+      return;
+    }
+    if (adminUsers.some((u) => u.username.toLowerCase() === cleanUsername)) {
+      showToast(`Username "${cleanUsername}" already exists. Please choose a different username.`, "info");
+      return;
+    }
+    if (!userForm.password.trim() || userForm.password.trim().length < 4) {
+      showToast("Password must be at least 4 characters long.", "info");
+      return;
+    }
+
+    const newUser = addAdminUser({
+      ...userForm,
+      username: cleanUsername,
+    });
+
+    logAdminActivity({
+      type: "user",
+      title: "New Admin User Created",
+      description: `Added administrator "${newUser.name}" (${newUser.role}, Access: ${newUser.accessLevel}) with distinct password.`,
+      targetName: newUser.name,
+      actor: currentAdminUser?.name || "Super Admin",
+    });
+
+    reloadData();
+    setIsAddUserModalOpen(false);
+    showToast(`🎉 Admin user "${newUser.name}" added successfully!`);
+  };
+
+  // Open Edit User Modal
+  const handleOpenEditUserModal = (user: AdminUser) => {
+    setEditingAdminUser(user);
+    setUserForm({
+      name: user.name,
+      username: user.username,
+      password: user.password,
+      role: user.role,
+      accessLevel: user.accessLevel,
+      email: user.email || "",
+      phone: user.phone || "",
+      status: user.status,
+    });
+  };
+
+  // Save changes to existing user (including individual password)
+  const handleSaveEditUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAdminUser) return;
+
+    if (!userForm.name.trim()) {
+      showToast("Please enter the user's full name.", "info");
+      return;
+    }
+    if (!userForm.password.trim() || userForm.password.trim().length < 4) {
+      showToast("Password must be at least 4 characters long.", "info");
+      return;
+    }
+
+    const cleanUsername = userForm.username.trim().toLowerCase().replace(/\s+/g, "");
+    const duplicate = adminUsers.find(
+      (u) => u.id !== editingAdminUser.id && u.username.toLowerCase() === cleanUsername
+    );
+    if (duplicate) {
+      showToast(`Username "${cleanUsername}" already taken by another admin.`, "info");
+      return;
+    }
+
+    const updated = updateAdminUser(editingAdminUser.id, {
+      name: userForm.name.trim(),
+      username: cleanUsername,
+      password: userForm.password.trim(),
+      role: userForm.role,
+      accessLevel: userForm.accessLevel,
+      email: userForm.email.trim(),
+      phone: userForm.phone.trim(),
+      status: userForm.status,
+    });
+
+    if (updated) {
+      logAdminActivity({
+        type: "user",
+        title: "Admin User Updated",
+        description: `Updated profile & credentials for "${userForm.name}".`,
+        targetName: userForm.name,
+        actor: currentAdminUser?.name || "Super Admin",
+      });
+      reloadData();
+      setEditingAdminUser(null);
+      showToast(`Profile & password for "${userForm.name}" updated successfully!`);
+    } else {
+      showToast("Failed to update user profile.", "info");
+    }
+  };
+
+  // Toggle user active / suspended status
+  const handleToggleUserStatus = (user: AdminUser) => {
+    if (user.isDefault && user.status === "active") {
+      showToast("Primary Super Admin account cannot be suspended.", "info");
+      return;
+    }
+    const newStatus = user.status === "active" ? "suspended" : "active";
+    updateAdminUser(user.id, { status: newStatus });
+    logAdminActivity({
+      type: "user",
+      title: `Admin User ${newStatus === "active" ? "Activated" : "Suspended"}`,
+      description: `Changed status of "${user.name}" to ${newStatus}.`,
+      targetName: user.name,
+      actor: currentAdminUser?.name || "Super Admin",
+    });
+    reloadData();
+    showToast(`User "${user.name}" is now ${newStatus}.`);
+  };
+
+  // Delete Admin User
+  const handleDeleteUser = (user: AdminUser) => {
+    const res = deleteAdminUser(user.id);
+    if (res.success) {
+      logAdminActivity({
+        type: "user",
+        title: "Admin User Removed",
+        description: `Deleted admin account for "${user.name}".`,
+        targetName: user.name,
+        actor: currentAdminUser?.name || "Super Admin",
+      });
+      reloadData();
+      setUserToDeleteModal(null);
+      showToast(res.message);
+    } else {
+      showToast(res.message, "info");
+    }
   };
 
   // Change Admin Passcode Handler
@@ -1117,12 +1358,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   isDark ? "text-neutral-400" : "text-neutral-600"
                 }`}
               >
-                Restricted portal for viewing website telemetry, working drawings, and publishing completed projects.
+                Enter your administrative credentials to unlock the Studio Console.
               </p>
             </div>
           </div>
 
-          {/* PIN Input Form */}
+          {/* PIN / Password Input Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
               <label
@@ -1130,18 +1371,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   isDark ? "text-neutral-300" : "text-neutral-700"
                 }`}
               >
-                <span>Enter Studio Access PIN</span>
+                <span>Admin Username (Optional)</span>
+                <span className="text-[11px] text-neutral-500 font-mono">
+                  {loginUsernameInput ? `@${loginUsernameInput}` : "Any active admin"}
+                </span>
+              </label>
+              <input
+                type="text"
+                placeholder="Username (e.g. abhishek, shreeyash, manager)"
+                value={loginUsernameInput}
+                onChange={(e) => {
+                  setLoginUsernameInput(e.target.value);
+                  setSelectedLoginUserId("");
+                  setPinError("");
+                }}
+                className={`w-full px-3.5 py-2 rounded-xl text-xs focus:outline-none transition-colors border ${
+                  isDark
+                    ? "bg-[#0d0f15] border-[#272b38] text-white placeholder-neutral-500 focus:border-[#c8a96e]"
+                    : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900 placeholder-neutral-400 focus:border-[#c8a96e]"
+                }`}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                className={`text-xs font-semibold flex items-center justify-between ${
+                  isDark ? "text-neutral-300" : "text-neutral-700"
+                }`}
+              >
+                <span>Individual User Password / Passcode *</span>
                 <span className="text-[11px] text-[#c8a96e] font-mono flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> Secure Access
+                  <Lock className="w-3 h-3" /> Distinct Passcode
                 </span>
               </label>
               <input
                 type="password"
-                placeholder="Enter Studio Administration Passcode"
+                placeholder="Enter your individual password"
                 value={pinInput}
-                onChange={(e) => setPinInput(e.target.value)}
+                onChange={(e) => {
+                  setPinInput(e.target.value);
+                  setPinError("");
+                }}
                 autoFocus
-                className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none transition-colors border ${
+                className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none transition-colors border font-mono ${
                   isDark
                     ? "bg-[#0d0f15] border-[#272b38] text-white placeholder-neutral-500 focus:border-[#c8a96e]"
                     : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900 placeholder-neutral-400 focus:border-[#c8a96e]"
@@ -1161,7 +1433,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 className="w-full py-3 bg-[#c8a96e] hover:bg-[#dfc085] text-[#0c0e12] font-semibold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg active:scale-98"
               >
                 <Unlock className="w-4 h-4" />
-                <span>Unlock Executive Dashboard</span>
+                <span>Unlock Executive Console</span>
               </button>
 
               <button
@@ -1270,6 +1542,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             {/* Global Theme Toggler for Admin */}
             <ThemeToggle />
 
+            {/* Quick Add Admin User Button with Distinct Passcode */}
+            <button
+              onClick={handleOpenAddUserModal}
+              className="px-2.5 sm:px-3 sm:py-1.5 bg-[#c8a96e]/15 hover:bg-[#c8a96e] text-[#c8a96e] hover:text-[#0c0e12] border border-[#c8a96e]/40 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 shrink-0"
+              title="Add New Admin User with Individual Password"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Admin User</span>
+              <span className="sm:hidden">Add Admin</span>
+            </button>
+
             <button
               onClick={() => setIsPasswordModalOpen(true)}
               className={`p-2 sm:px-3 sm:py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer ${
@@ -1343,6 +1626,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               }`}
             >
               {stats.totalCompleted}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`pb-2 px-1.5 sm:px-1 border-b-2 font-medium transition-colors flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer shrink-0 ${
+              activeTab === "users"
+                ? "border-[#c8a96e] text-[#c8a96e] font-semibold"
+                : isDark
+                ? "border-transparent text-neutral-400 hover:text-white"
+                : "border-transparent text-neutral-600 hover:text-neutral-900"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span className="hidden sm:inline">Admin Users &amp; Passwords</span>
+            <span className="sm:hidden">Users</span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono border ${
+                isDark
+                  ? "bg-[#1b202c] text-[#c8a96e] border-[#c8a96e]/30"
+                  : "bg-[#fef8ee] text-[#8c6d32] border-[#c8a96e]/40"
+              }`}
+            >
+              {adminUsers.length}
             </span>
           </button>
 
@@ -3491,6 +3798,395 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
         )}
+
+        {/* ════════════════════════════════════════════
+            TAB 7: MULTI-ADMIN USERS & PASSWORDS DIRECTORY
+           ════════════════════════════════════════════ */}
+        {activeTab === "users" && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Top Multi-Admin Banner */}
+            <div
+              className={`p-4 sm:p-5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg ${
+                isDark
+                  ? "border-[#c8a96e]/40 bg-gradient-to-r from-[#181d29] via-[#141822] to-[#1a1c22]"
+                  : "border-[#c8a96e]/60 bg-gradient-to-r from-[#fdfbf7] via-[#faf5ea] to-[#fdfbf7]"
+              }`}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#c8a96e]/20 text-[#c8a96e] border border-[#c8a96e]/30 flex items-center gap-1 font-mono">
+                    <Users className="w-3.5 h-3.5" /> Studio Multi-Admin Suite
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-mono font-semibold flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Independent Passwords per User
+                  </span>
+                </div>
+                <h3 className={`font-serif text-lg sm:text-xl font-bold ${isDark ? "text-white" : "text-neutral-900"}`}>
+                  Administrator Profiles &amp; Distinct Passcodes
+                </h3>
+                <p className="text-xs text-neutral-400 max-w-2xl leading-relaxed">
+                  Add and manage studio administrators, associate architects, and project managers. Each user possesses their own unique username, distinct password, role permissions, and activity audit trail.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                {/* Primary Add Admin User Action Button */}
+                <button
+                  type="button"
+                  onClick={handleOpenAddUserModal}
+                  className="px-4 py-2.5 bg-[#c8a96e] hover:bg-[#dfc085] text-[#0c0e12] font-semibold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md flex items-center gap-2 active:scale-95 shrink-0"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>+ Add Admin User</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Admin Stats Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div
+                className={`p-3.5 sm:p-4 rounded-xl border transition-colors ${
+                  isDark ? "bg-[#12151f] border-[#232734]" : "bg-white border-[#e2e6ee] shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wider text-neutral-400 font-semibold">
+                    Total Admins
+                  </span>
+                  <Users className="w-4 h-4 text-[#c8a96e]" />
+                </div>
+                <div className={`text-xl sm:text-2xl font-bold font-serif mt-1 ${isDark ? "text-white" : "text-neutral-900"}`}>
+                  {adminUsers.length} Users
+                </div>
+                <p className="text-[10px] text-neutral-400 mt-0.5">Registered accounts</p>
+              </div>
+
+              <div
+                className={`p-3.5 sm:p-4 rounded-xl border transition-colors ${
+                  isDark ? "bg-[#12151f] border-[#232734]" : "bg-white border-[#e2e6ee] shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">
+                    Active Accounts
+                  </span>
+                  <UserCheck className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="text-xl sm:text-2xl font-bold font-serif text-emerald-400 mt-1">
+                  {adminUsers.filter((u) => u.status === "active").length} Active
+                </div>
+                <p className="text-[10px] text-neutral-400 mt-0.5">Ready to authenticate</p>
+              </div>
+
+              <div
+                className={`p-3.5 sm:p-4 rounded-xl border transition-colors ${
+                  isDark ? "bg-[#12151f] border-[#232734]" : "bg-white border-[#e2e6ee] shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wider text-amber-400 font-semibold">
+                    Super Admins
+                  </span>
+                  <ShieldCheck className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="text-xl sm:text-2xl font-bold font-serif text-amber-400 mt-1">
+                  {adminUsers.filter((u) => u.accessLevel === "Super Admin").length} Executives
+                </div>
+                <p className="text-[10px] text-neutral-400 mt-0.5">Full control permissions</p>
+              </div>
+
+              <div
+                className={`p-3.5 sm:p-4 rounded-xl border transition-colors ${
+                  isDark ? "bg-[#12151f] border-[#232734]" : "bg-white border-[#e2e6ee] shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wider text-blue-400 font-semibold">
+                    Project Managers
+                  </span>
+                  <UserCog className="w-4 h-4 text-blue-400" />
+                </div>
+                <div className="text-xl sm:text-2xl font-bold font-serif text-blue-400 mt-1">
+                  {adminUsers.filter((u) => u.accessLevel !== "Super Admin").length} Leads
+                </div>
+                <p className="text-[10px] text-neutral-400 mt-0.5">Pipeline management</p>
+              </div>
+            </div>
+
+            {/* Admin Users Directory List & Cards */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h4 className={`font-serif font-bold text-base ${isDark ? "text-white" : "text-neutral-900"}`}>
+                    Studio User Directory ({adminUsers.length})
+                  </h4>
+                  <p className="text-xs text-neutral-400">
+                    Each user can unlock the console using their individual username or dedicated passcode.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleOpenAddUserModal}
+                  className="px-3 py-1.5 bg-[#c8a96e]/15 hover:bg-[#c8a96e] text-[#c8a96e] hover:text-[#0c0e12] border border-[#c8a96e]/40 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Another Admin</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {adminUsers.map((user) => {
+                  const isPasswordRevealed = !!showUserPasswords[user.id];
+                  const isCurrentUser = currentAdminUser?.id === user.id;
+
+                  return (
+                    <div
+                      key={user.id}
+                      className={`rounded-2xl p-5 flex flex-col justify-between space-y-4 border transition-all relative ${
+                        user.status === "suspended"
+                          ? isDark
+                            ? "bg-[#11131a]/60 border-neutral-800 opacity-75"
+                            : "bg-neutral-100 border-neutral-300 opacity-75"
+                          : isDark
+                          ? "bg-[#12151f] border-[#232734] hover:border-[#c8a96e]/40 shadow-sm"
+                          : "bg-white border-[#e2e6ee] hover:border-[#c8a96e]/60 shadow-sm"
+                      }`}
+                    >
+                      {/* Top Badges & Status */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          {/* User Avatar */}
+                          <div
+                            className={`w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border shrink-0 ${
+                              user.avatarColor || "bg-amber-500/20 text-amber-400 border-amber-500/40"
+                            }`}
+                          >
+                            {user.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h5 className={`font-serif font-bold text-sm truncate ${isDark ? "text-white" : "text-neutral-900"}`}>
+                                {user.name}
+                              </h5>
+                              {user.isDefault && (
+                                <span title="Primary Default Admin" className="text-[#c8a96e]">
+                                  ★
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-[#c8a96e] font-mono block">
+                              @{user.username}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="flex flex-col items-end gap-1">
+                          <span
+                            className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border ${
+                              user.status === "active"
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                : "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                            }`}
+                          >
+                            {user.status}
+                          </span>
+                          {isCurrentUser && (
+                            <span className="text-[9px] font-mono text-[#c8a96e] bg-[#c8a96e]/10 px-1.5 py-0.2 rounded border border-[#c8a96e]/30">
+                              Current Session
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Roles & Permissions */}
+                      <div className="flex items-center gap-2 flex-wrap text-xs">
+                        <span className={`px-2 py-0.5 rounded-md font-mono text-[11px] border ${
+                          isDark ? "bg-[#181c28] border-[#292f3f] text-neutral-300" : "bg-[#f4f6fa] border-[#d8dde6] text-neutral-800"
+                        }`}>
+                          {user.role}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-md font-mono text-[10px] font-semibold border ${
+                            user.accessLevel === "Super Admin"
+                              ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                              : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                          }`}
+                        >
+                          {user.accessLevel}
+                        </span>
+                      </div>
+
+                      {/* ── DISTINCT PASSWORD DISPLAY & TOGGLE ── */}
+                      <div
+                        className={`p-3 rounded-xl border space-y-1.5 transition-colors ${
+                          isDark ? "bg-[#0b0e15] border-[#1f2433]" : "bg-[#f8f9fc] border-[#e2e6ee]"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-neutral-400 flex items-center gap-1 font-semibold">
+                            <Key className="w-3 h-3 text-[#c8a96e]" />
+                            <span>Individual Passcode:</span>
+                          </span>
+                          <span className="text-[10px] font-mono text-neutral-500">
+                            Unique Credential
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-0.5">
+                          <div className="font-mono text-xs px-2.5 py-1.5 rounded-lg bg-black/40 border border-white/5 flex-1 select-all truncate text-[#c8a96e] font-semibold tracking-wider">
+                            {isPasswordRevealed ? user.password : "••••••••••••"}
+                          </div>
+
+                          {/* Show/Hide Password */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowUserPasswords((prev) => ({
+                                ...prev,
+                                [user.id]: !prev[user.id],
+                              }));
+                            }}
+                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer shrink-0 ${
+                              isDark
+                                ? "bg-[#181c28] hover:bg-[#202534] border-[#2c3244] text-neutral-300"
+                                : "bg-[#f0f3f8] hover:bg-[#e4e8f0] border-[#d8dde6] text-neutral-700"
+                            }`}
+                            title={isPasswordRevealed ? "Hide Password" : "Show Password"}
+                          >
+                            {isPasswordRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+
+                          {/* Copy Password */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(user.password);
+                              showToast(`Copied password for "${user.name}" to clipboard!`);
+                            }}
+                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer shrink-0 ${
+                              isDark
+                                ? "bg-[#181c28] hover:bg-[#202534] border-[#2c3244] text-neutral-300 hover:text-[#c8a96e]"
+                                : "bg-[#f0f3f8] hover:bg-[#e4e8f0] border-[#d8dde6] text-neutral-700 hover:text-[#c8a96e]"
+                            }`}
+                            title="Copy Password to Clipboard"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Contact & Audit Meta */}
+                      <div className="text-[11px] text-neutral-400 space-y-1">
+                        {user.email && (
+                          <div className="flex items-center gap-1.5 truncate">
+                            <Mail className="w-3 h-3 text-neutral-500 shrink-0" />
+                            <span className="truncate">{user.email}</span>
+                          </div>
+                        )}
+                        {user.phone && (
+                          <div className="flex items-center gap-1.5 truncate">
+                            <Phone className="w-3 h-3 text-neutral-500 shrink-0" />
+                            <span>{user.phone}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between pt-1 border-t border-[#1e2330] text-[10px]">
+                          <span>Added {new Date(user.createdAt).toLocaleDateString()}</span>
+                          {user.lastLogin && (
+                            <span className="text-emerald-400 font-mono">
+                              Active {Math.round((Date.now() - user.lastLogin) / (1000 * 60))}m ago
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action Tools: Edit Profile & Password, Suspend, Delete */}
+                      <div className="pt-2 border-t border-[#1e2330] flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditUserModal(user)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-colors cursor-pointer flex-1 justify-center ${
+                            isDark
+                              ? "bg-[#181c28] hover:bg-[#202534] border-[#292f3f] text-neutral-200 hover:text-white"
+                              : "bg-[#f4f6fa] hover:bg-[#e8ecf4] border-[#d8dde6] text-neutral-800 hover:text-black shadow-sm"
+                          }`}
+                        >
+                          <Edit className="w-3 h-3 text-[#c8a96e]" />
+                          <span>Edit &amp; Password</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleUserStatus(user)}
+                          className={`p-1.5 rounded-lg border text-xs transition-colors cursor-pointer shrink-0 ${
+                            user.status === "active"
+                              ? isDark
+                                ? "bg-[#181c28] hover:bg-amber-950/30 text-neutral-400 hover:text-amber-300 border-[#292f3f]"
+                                : "bg-[#f4f6fa] hover:bg-amber-50 text-neutral-600 hover:text-amber-700 border-[#d8dde6]"
+                              : isDark
+                              ? "bg-emerald-950/30 hover:bg-emerald-900/40 text-emerald-300 border-emerald-500/30"
+                              : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300"
+                          }`}
+                          title={user.status === "active" ? "Suspend Admin Account" : "Activate Account"}
+                        >
+                          {user.status === "active" ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setUserToDeleteModal(user)}
+                          disabled={
+                            adminUsers.length <= 1 ||
+                            (user.accessLevel === "Super Admin" &&
+                              adminUsers.filter((u) => u.accessLevel === "Super Admin" && u.status === "active").length <= 1)
+                          }
+                          className={`p-1.5 rounded-lg border text-xs transition-colors shrink-0 ${
+                            adminUsers.length <= 1 ||
+                            (user.accessLevel === "Super Admin" &&
+                              adminUsers.filter((u) => u.accessLevel === "Super Admin" && u.status === "active").length <= 1)
+                              ? "opacity-30 cursor-not-allowed bg-transparent border-neutral-800 text-neutral-600"
+                              : isDark
+                              ? "bg-rose-950/20 hover:bg-rose-950/50 text-rose-400 border-rose-500/30 cursor-pointer"
+                              : "bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200 cursor-pointer"
+                          }`}
+                          title={
+                            adminUsers.length <= 1
+                              ? "Cannot delete the last remaining studio admin"
+                              : user.accessLevel === "Super Admin" &&
+                                adminUsers.filter((u) => u.accessLevel === "Super Admin" && u.status === "active").length <= 1
+                              ? "Cannot delete the only active Super Admin account"
+                              : `Delete ${user.name}'s account`
+                          }
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Explanatory Help Card for Multi-User Passcodes */}
+            <div
+              className={`p-5 rounded-2xl border space-y-3 transition-colors ${
+                isDark ? "bg-[#10131c] border-[#1e2330]" : "bg-[#f8f9fc] border-[#e2e6ee]"
+              }`}
+            >
+              <div className="flex items-center gap-2 text-[#c8a96e]">
+                <ShieldCheck className="w-4 h-4" />
+                <h4 className={`font-serif font-bold text-sm ${isDark ? "text-white" : "text-neutral-900"}`}>
+                  Multi-Admin Security &amp; Password Isolation Architecture
+                </h4>
+              </div>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Mohalkar Architects supports distinct passwords for every team member. When team members access the Studio Control login gate, they can either click on their profile avatar and enter their specific password, or enter their unique username (e.g. <code>@abhishek</code>, <code>@shreeyash</code>, <code>@manager</code>) along with their individual password. Passwords can be changed or rotated at any time without affecting other users.
+              </p>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* ── EDIT WORKING PROJECT MODAL ───────────────── */}
@@ -5088,6 +5784,552 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── ADD ADMIN USER MODAL (WITH DISTINCT PASSWORD) ── */}
+      {isAddUserModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md overflow-y-auto p-3 sm:p-4 flex justify-center items-start sm:py-8">
+          <div
+            className={`w-full max-w-lg rounded-2xl p-5 sm:p-7 space-y-5 shadow-2xl relative my-auto sm:my-0 border transition-colors ${
+              isDark ? "bg-[#12151f] border-[#272b38] text-white" : "bg-white border-[#dce2ec] text-neutral-900 shadow-2xl"
+            }`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#1e2330] pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-[#c8a96e]/15 border border-[#c8a96e]/30 flex items-center justify-center text-[#c8a96e]">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className={`font-serif text-lg sm:text-xl font-bold ${isDark ? "text-white" : "text-neutral-900"}`}>
+                    Add New Admin User
+                  </h3>
+                  <p className="text-xs text-neutral-400">
+                    Create an administrator with their own distinct individual password.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsAddUserModalOpen(false)}
+                className="p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-[#1a1e28] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* User Form */}
+            <form onSubmit={handleCreateAdminUser} className="space-y-4">
+              {/* Full Name & Username */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ar. Rohit Shinde"
+                    value={userForm.name}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      const autoUsername = name.split(" ")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
+                      setUserForm((prev) => ({
+                        ...prev,
+                        name,
+                        username: prev.username || autoUsername,
+                      }));
+                    }}
+                    className={`w-full px-3.5 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none border transition-colors ${
+                      isDark
+                        ? "bg-[#0b0e15] border-[#272b38] text-white placeholder-neutral-500"
+                        : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900 placeholder-neutral-400"
+                    }`}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300 flex items-center justify-between">
+                    <span>Username / Login Handle *</span>
+                    <span className="text-[10px] text-neutral-500 font-mono">No spaces</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-xs text-neutral-500 font-mono">@</span>
+                    <input
+                      type="text"
+                      required
+                      placeholder="rohit"
+                      value={userForm.username}
+                      onChange={(e) =>
+                        setUserForm({
+                          ...userForm,
+                          username: e.target.value.toLowerCase().replace(/\s+/g, ""),
+                        })
+                      }
+                      className={`w-full pl-7 pr-3.5 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none font-mono border transition-colors ${
+                        isDark
+                          ? "bg-[#0b0e15] border-[#272b38] text-white placeholder-neutral-500"
+                          : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900 placeholder-neutral-400"
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* ── DISTINCT INDIVIDUAL PASSWORD INPUT ── */}
+              <div
+                className={`p-3.5 rounded-xl border space-y-2 transition-colors ${
+                  isDark ? "bg-[#0b0e15] border-[#c8a96e]/40" : "bg-[#fdfbf7] border-[#c8a96e]/60 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#c8a96e] flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Distinct Individual Password *</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const suggested = generateSuggestedPassword();
+                      setUserForm({ ...userForm, password: suggested });
+                      showToast(`Generated distinct passcode: "${suggested}"`);
+                    }}
+                    className="text-[11px] text-[#c8a96e] hover:underline flex items-center gap-1 cursor-pointer font-mono"
+                  >
+                    <span>🎲 Generate Random</span>
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-neutral-400">
+                  This admin will use this separate password to unlock the studio console.
+                </p>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter distinct password (e.g. mohalkar4921)"
+                    value={userForm.password}
+                    onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                    className={`w-full px-3.5 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none font-mono border transition-colors ${
+                      isDark
+                        ? "bg-[#141824] border-[#2d3448] text-white placeholder-neutral-500"
+                        : "bg-white border-[#d8dde6] text-neutral-900 placeholder-neutral-400"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Role & Access Level */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300">
+                    Studio Role *
+                  </label>
+                  <select
+                    value={userForm.role}
+                    onChange={(e) => setUserForm({ ...userForm, role: e.target.value as any })}
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none border transition-colors ${
+                      isDark
+                        ? "bg-[#0b0e15] border-[#272b38] text-white"
+                        : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900"
+                    }`}
+                  >
+                    <option value="Associate Architect">Associate Architect</option>
+                    <option value="Principal Architect">Principal Architect</option>
+                    <option value="Studio Manager">Studio Manager</option>
+                    <option value="Project Lead">Project Lead</option>
+                    <option value="Draftsman / Visualizer">Draftsman / Visualizer</option>
+                    <option value="Editor">Content Editor</option>
+                    <option value="Viewer">Read-Only Viewer</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300">
+                    Access Permission Level *
+                  </label>
+                  <select
+                    value={userForm.accessLevel}
+                    onChange={(e) => setUserForm({ ...userForm, accessLevel: e.target.value as any })}
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none border transition-colors ${
+                      isDark
+                        ? "bg-[#0b0e15] border-[#272b38] text-white"
+                        : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900"
+                    }`}
+                  >
+                    <option value="Project Manager">Project Manager (Pipeline &amp; Publish)</option>
+                    <option value="Super Admin">Super Admin (Full Console Access)</option>
+                    <option value="Enquiry & Telemetry Manager">Enquiries &amp; Telemetry Manager</option>
+                    <option value="Read Only">Read Only (Inspection)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Email & Phone (Optional) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300">
+                    Email Address (Optional)
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="user@mohalkar.com"
+                    value={userForm.email}
+                    onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                    className={`w-full px-3.5 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none border transition-colors ${
+                      isDark
+                        ? "bg-[#0b0e15] border-[#272b38] text-white placeholder-neutral-500"
+                        : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900 placeholder-neutral-400"
+                    }`}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300">
+                    Mobile Phone (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+91 98000 00000"
+                    value={userForm.phone}
+                    onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
+                    className={`w-full px-3.5 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none border transition-colors ${
+                      isDark
+                        ? "bg-[#0b0e15] border-[#272b38] text-white placeholder-neutral-500"
+                        : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900 placeholder-neutral-400"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Live Preview Card */}
+              <div
+                className={`p-3 rounded-xl border text-xs space-y-1.5 transition-colors ${
+                  isDark ? "bg-[#090b10] border-[#1e2330]" : "bg-[#f4f6fa] border-[#e2e6ee]"
+                }`}
+              >
+                <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block">
+                  New Admin Credentials Summary:
+                </span>
+                <div className="flex items-center justify-between font-mono text-[11px] text-neutral-300">
+                  <span>Username: <strong>@{userForm.username || "username"}</strong></span>
+                  <span>Passcode: <strong className="text-[#c8a96e]">{userForm.password || "••••"}</strong></span>
+                </div>
+              </div>
+
+              {/* Submit / Cancel Buttons */}
+              <div className="pt-2 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsAddUserModalOpen(false)}
+                  className={`w-full sm:w-auto px-4 py-2.5 text-xs font-medium rounded-xl transition-colors cursor-pointer text-center ${
+                    isDark ? "bg-[#181c28] hover:bg-[#202534] text-neutral-300" : "bg-[#f0f3f8] hover:bg-[#e4e8f0] text-neutral-700 border border-[#d8dfea]"
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-[#c8a96e] hover:bg-[#dfc085] text-[#0c0e12] text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 active:scale-95 text-center"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Create Admin User</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── EDIT ADMIN USER & PASSWORD MODAL ────────── */}
+      {editingAdminUser && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md overflow-y-auto p-3 sm:p-4 flex justify-center items-start sm:py-8">
+          <div
+            className={`w-full max-w-lg rounded-2xl p-5 sm:p-7 space-y-5 shadow-2xl relative my-auto sm:my-0 border transition-colors ${
+              isDark ? "bg-[#12151f] border-[#272b38] text-white" : "bg-white border-[#dce2ec] text-neutral-900 shadow-2xl"
+            }`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#1e2330] pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-[#c8a96e]/15 border border-[#c8a96e]/30 flex items-center justify-center text-[#c8a96e]">
+                  <UserCog className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className={`font-serif text-lg sm:text-xl font-bold ${isDark ? "text-white" : "text-neutral-900"}`}>
+                    Edit Admin &amp; Password
+                  </h3>
+                  <p className="text-xs text-neutral-400">
+                    Update profile info, role permissions, or distinct individual password.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setEditingAdminUser(null)}
+                className="p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-[#1a1e28] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveEditUser} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={userForm.name}
+                    onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                    className={`w-full px-3.5 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none border transition-colors ${
+                      isDark
+                        ? "bg-[#0b0e15] border-[#272b38] text-white"
+                        : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900"
+                    }`}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300">
+                    Username / Handle *
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-xs text-neutral-500 font-mono">@</span>
+                    <input
+                      type="text"
+                      required
+                      value={userForm.username}
+                      onChange={(e) =>
+                        setUserForm({
+                          ...userForm,
+                          username: e.target.value.toLowerCase().replace(/\s+/g, ""),
+                        })
+                      }
+                      className={`w-full pl-7 pr-3.5 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none font-mono border transition-colors ${
+                        isDark
+                          ? "bg-[#0b0e15] border-[#272b38] text-white"
+                          : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900"
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* ── UPDATE DISTINCT PASSWORD ── */}
+              <div
+                className={`p-3.5 rounded-xl border space-y-2 transition-colors ${
+                  isDark ? "bg-[#0b0e15] border-[#c8a96e]/40" : "bg-[#fdfbf7] border-[#c8a96e]/60 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#c8a96e] flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Change Individual Password *</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const suggested = generateSuggestedPassword();
+                      setUserForm({ ...userForm, password: suggested });
+                      showToast(`Generated new passcode: "${suggested}"`);
+                    }}
+                    className="text-[11px] text-[#c8a96e] hover:underline flex items-center gap-1 cursor-pointer font-mono"
+                  >
+                    <span>🎲 Generate New</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={userForm.password}
+                    onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                    className={`w-full px-3.5 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none font-mono border transition-colors ${
+                      isDark
+                        ? "bg-[#141824] border-[#2d3448] text-white"
+                        : "bg-white border-[#d8dde6] text-neutral-900"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Role & Access Level */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300">
+                    Studio Role *
+                  </label>
+                  <select
+                    value={userForm.role}
+                    onChange={(e) => setUserForm({ ...userForm, role: e.target.value as any })}
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none border transition-colors ${
+                      isDark
+                        ? "bg-[#0b0e15] border-[#272b38] text-white"
+                        : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900"
+                    }`}
+                  >
+                    <option value="Associate Architect">Associate Architect</option>
+                    <option value="Principal Architect">Principal Architect</option>
+                    <option value="Studio Manager">Studio Manager</option>
+                    <option value="Project Lead">Project Lead</option>
+                    <option value="Draftsman / Visualizer">Draftsman / Visualizer</option>
+                    <option value="Editor">Content Editor</option>
+                    <option value="Viewer">Read-Only Viewer</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-300">
+                    Access Level *
+                  </label>
+                  <select
+                    value={userForm.accessLevel}
+                    onChange={(e) => setUserForm({ ...userForm, accessLevel: e.target.value as any })}
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs focus:border-[#c8a96e] focus:outline-none border transition-colors ${
+                      isDark
+                        ? "bg-[#0b0e15] border-[#272b38] text-white"
+                        : "bg-[#f8f9fc] border-[#d8dde6] text-neutral-900"
+                    }`}
+                  >
+                    <option value="Project Manager">Project Manager</option>
+                    <option value="Super Admin">Super Admin</option>
+                    <option value="Enquiry & Telemetry Manager">Enquiry &amp; Telemetry Manager</option>
+                    <option value="Read Only">Read Only</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-neutral-300">
+                  Account Status
+                </label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="active"
+                      checked={userForm.status === "active"}
+                      onChange={() => setUserForm({ ...userForm, status: "active" })}
+                    />
+                    <span>Active (Can log in)</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="suspended"
+                      checked={userForm.status === "suspended"}
+                      onChange={() => setUserForm({ ...userForm, status: "suspended" })}
+                    />
+                    <span>Suspended (Disabled)</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const toDelete = editingAdminUser;
+                    setEditingAdminUser(null);
+                    setUserToDeleteModal(toDelete);
+                  }}
+                  disabled={
+                    adminUsers.length <= 1 ||
+                    (editingAdminUser.accessLevel === "Super Admin" &&
+                      adminUsers.filter((u) => u.accessLevel === "Super Admin" && u.status === "active").length <= 1)
+                  }
+                  className={`px-3.5 py-2.5 rounded-xl text-xs font-medium border flex items-center justify-center gap-1.5 transition-colors ${
+                    adminUsers.length <= 1 ||
+                    (editingAdminUser.accessLevel === "Super Admin" &&
+                      adminUsers.filter((u) => u.accessLevel === "Super Admin" && u.status === "active").length <= 1)
+                      ? "opacity-40 cursor-not-allowed bg-transparent border-neutral-800 text-neutral-600"
+                      : "bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border-rose-500/30 cursor-pointer"
+                  }`}
+                  title="Permanently remove this administrator account"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Admin Account</span>
+                </button>
+
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingAdminUser(null)}
+                    className={`px-4 py-2.5 text-xs font-medium rounded-xl transition-colors cursor-pointer text-center ${
+                      isDark ? "bg-[#181c28] hover:bg-[#202534] text-neutral-300" : "bg-[#f0f3f8] hover:bg-[#e4e8f0] text-neutral-700 border border-[#d8dfea]"
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-[#c8a96e] hover:bg-[#dfc085] text-[#0c0e12] text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 active:scale-95 text-center"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Save User &amp; Password</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── DELETE ADMIN USER CONFIRMATION MODAL ───── */}
+      {userToDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div
+            className={`w-full max-w-md rounded-2xl p-6 sm:p-7 shadow-2xl space-y-4 border transition-colors ${
+              isDark ? "bg-[#12151f] border-rose-500/40 text-white" : "bg-white border-rose-500/50 text-neutral-900 shadow-2xl"
+            }`}
+          >
+            <div className="w-12 h-12 rounded-xl bg-rose-950/50 border border-rose-500/40 flex items-center justify-center text-rose-400 mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-2">
+              <h3 className={`font-serif text-base sm:text-lg font-bold ${isDark ? "text-white" : "text-neutral-900"}`}>
+                Remove Admin &ldquo;{userToDeleteModal.name}&rdquo;?
+              </h3>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                This will delete the administrator account <strong>@{userToDeleteModal.username}</strong> and revoke their password login credentials.
+              </p>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-center gap-2.5 pt-2 w-full">
+              <button
+                type="button"
+                onClick={() => setUserToDeleteModal(null)}
+                className={`w-full sm:w-auto px-4 py-2.5 text-xs rounded-xl cursor-pointer text-center transition-colors ${
+                  isDark ? "text-neutral-300 hover:text-white bg-[#181c28]" : "text-neutral-700 hover:text-black bg-[#f0f3f8] border border-[#d8dfea]"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteUser(userToDeleteModal)}
+                className="w-full sm:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer shadow-lg text-center"
+              >
+                Yes, Delete Admin User
+              </button>
+            </div>
           </div>
         </div>
       )}

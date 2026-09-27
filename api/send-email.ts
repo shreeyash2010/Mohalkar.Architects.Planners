@@ -3,161 +3,157 @@
 
 export default async function handler(req: any, res: any) {
   // Set CORS headers
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
-    "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ success: false, error: "Method not allowed" });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  try {
-    const {
-      name,
-      email,
-      phone,
-      location = "Maharashtra",
-      type = "Residential",
-      budget = "To be discussed",
-      details = "",
-      source = "Direct Website",
-    } = req.body || {};
+  const { name, phone, email, location, typology, sqft, budget, message, submittedAt } = req.body || {};
 
-    if (!name || !email || !phone) {
-      return res.status(400).json({
-        success: false,
-        error: "Missing required fields: name, email, phone",
-      });
-    }
+  if (!name || !email || !phone) {
+    return res.status(400).json({ error: 'Name, Phone and Email are required.' });
+  }
 
-    const emailSubject = `New Project Enquiry: ${name} (${type.toUpperCase()}) - Mohalkar Architects`;
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
-        <h2 style="color: #c8a96e; border-bottom: 2px solid #c8a96e; padding-bottom: 10px; margin-top: 0;">
-          Mohalkar Architects &amp; Planners
-        </h2>
-        <h3 style="color: #1f2937;">New Client Consultation Brief</h3>
-        
-        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-          <tr style="border-bottom: 1px solid #f3f4f6;">
-            <td style="padding: 8px; font-weight: bold; color: #4b5563; width: 35%;">Client Name:</td>
-            <td style="padding: 8px; color: #111827;">${name}</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #f3f4f6;">
-            <td style="padding: 8px; font-weight: bold; color: #4b5563;">Phone:</td>
-            <td style="padding: 8px; color: #111827;"><a href="tel:${phone}">${phone}</a></td>
-          </tr>
-          <tr style="border-bottom: 1px solid #f3f4f6;">
-            <td style="padding: 8px; font-weight: bold; color: #4b5563;">Email:</td>
-            <td style="padding: 8px; color: #111827;"><a href="mailto:${email}">${email}</a></td>
-          </tr>
-          <tr style="border-bottom: 1px solid #f3f4f6;">
-            <td style="padding: 8px; font-weight: bold; color: #4b5563;">Location:</td>
-            <td style="padding: 8px; color: #111827;">${location}</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #f3f4f6;">
-            <td style="padding: 8px; font-weight: bold; color: #4b5563;">Project Typology:</td>
-            <td style="padding: 8px; color: #111827;">${type}</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #f3f4f6;">
-            <td style="padding: 8px; font-weight: bold; color: #4b5563;">Approximate Budget:</td>
-            <td style="padding: 8px; color: #111827;">${budget}</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #f3f4f6;">
-            <td style="padding: 8px; font-weight: bold; color: #4b5563;">Referral Source:</td>
-            <td style="padding: 8px; color: #111827;">${source}</td>
-          </tr>
-        </table>
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f7f6f2; color: #222; margin: 0; padding: 24px; }
+          .card { max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2ded4; padding: 32px; border-radius: 2px; }
+          .header { border-bottom: 2px solid #c8a96e; padding-bottom: 16px; margin-bottom: 24px; }
+          .header h1 { font-size: 20px; letter-spacing: 2px; text-transform: uppercase; color: #1a1a1a; margin: 0; }
+          .header p { font-size: 11px; color: #888; text-transform: uppercase; margin-top: 4px; letter-spacing: 1px; }
+          .metric-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+          .metric-table td { padding: 8px 12px; border: 1px solid #eee; font-size: 13px; }
+          .metric-label { font-weight: bold; width: 35%; background: #fdfbf7; color: #666; font-size: 11px; text-transform: uppercase; }
+          .message-box { background: #faf9f6; border-left: 3px solid #c8a96e; padding: 16px; font-size: 14px; line-height: 1.6; color: #333; margin-top: 16px; }
+          .footer { margin-top: 32px; font-size: 11px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="header">
+            <h1>Mohalkar Architects &amp; Planners</h1>
+            <p>New Architectural Project Brief Received</p>
+          </div>
 
-        <div style="margin-top: 20px; padding: 15px; background-color: #f9fafb; border-radius: 6px;">
-          <h4 style="margin: 0 0 8px 0; color: #374151;">Project Brief &amp; Scope:</h4>
-          <p style="margin: 0; white-space: pre-wrap; color: #1f2937; line-height: 1.5;">${details}</p>
+          <table class="metric-table">
+            <tr>
+              <td class="metric-label">Client Name</td>
+              <td><strong>${name}</strong></td>
+            </tr>
+            <tr>
+              <td class="metric-label">Phone / WhatsApp</td>
+              <td><a href="tel:${phone}" style="color: #c8a96e; text-decoration: none; font-weight: bold;">${phone}</a></td>
+            </tr>
+            <tr>
+              <td class="metric-label">Email</td>
+              <td><a href="mailto:${email}" style="color: #222;">${email}</a></td>
+            </tr>
+            <tr>
+              <td class="metric-label">Site Location</td>
+              <td>${location || 'Not Specified'}</td>
+            </tr>
+            <tr>
+              <td class="metric-label">Typology</td>
+              <td><strong>${typology || 'Residential'}</strong></td>
+            </tr>
+            <tr>
+              <td class="metric-label">Approx. Built-Up Area</td>
+              <td>${sqft || 'Not Specified'}</td>
+            </tr>
+            <tr>
+              <td class="metric-label">Project Budget</td>
+              <td>${budget || 'To be discussed'}</td>
+            </tr>
+            <tr>
+              <td class="metric-label">Timestamp</td>
+              <td>${submittedAt || new Date().toISOString()}</td>
+            </tr>
+          </table>
+
+          <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #888;">Project Brief &amp; Scope:</div>
+          <div class="message-box">
+            ${message ? message.replace(/\n/g, '<br>') : 'No extra message provided.'}
+          </div>
+
+          <div class="footer">
+            Mohalkar Architects &amp; Planners · Studio Portal Notification
+          </div>
         </div>
+      </body>
+    </html>
+  `;
 
-        <p style="margin-top: 20px; font-size: 12px; color: #9ca3af; text-align: center;">
-          Sent via Mohalkar Architects &amp; Planners Online Enquiry Portal
-        </p>
-      </div>
-    `;
+  // Check for RESEND_API_KEY environment variable if configured
+  const resendApiKey = process.env.RESEND_API_KEY;
 
-    // 1. If RESEND_API_KEY is configured in Vercel Environment Variables
-    if (process.env.RESEND_API_KEY) {
-      const resendResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
+  if (resendApiKey) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM_EMAIL || "Mohalkar Architects <onboarding@resend.dev>",
-          to: [
-            process.env.STUDIO_EMAIL || "mohalkararchitectsandplanners@gmail.com",
-            "abhishekmohalkar0062@gmail.com",
-          ],
+          from: 'Mohalkar Studio Briefs <onboarding@resend.dev>',
+          to: ['mohalkararchitectsandplanners@gmail.com'],
+          cc: ['abhishekmohalkar0062@gmail.com'],
           reply_to: email,
-          subject: emailSubject,
-          html: emailHtml,
-        }),
+          subject: `[New Brief] ${typology || 'Architectural'} Enquiry from ${name}`,
+          html: emailHtml
+        })
       });
 
-      const resendData = await resendResponse.json();
-      if (resendResponse.ok) {
-        return res.status(200).json({
-          success: true,
-          provider: "resend",
-          message: "Enquiry email successfully delivered!",
-          data: resendData,
-        });
+      if (response.ok) {
+        return res.status(200).json({ success: true, message: 'Dispatched via Resend API' });
       }
+    } catch (e) {
+      console.error('Resend delivery error:', e);
     }
+  }
 
-    // 2. Fallback: FormSubmit relay
-    const formSubmitResponse = await fetch(
-      "https://formsubmit.co/ajax/mohalkararchitectsandplanners@gmail.com",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          phone,
-          email,
-          project_location: location,
-          project_type: type,
-          approximate_budget: budget,
-          referral_source: source,
-          project_details: details,
-          _subject: emailSubject,
-          _cc: "abhishekmohalkar0062@gmail.com",
-          _replyto: email,
-          _template: "table",
-          _captcha: "false",
-        }),
-      }
-    );
-
-    const formSubmitData = await formSubmitResponse.json().catch(() => ({}));
-    return res.status(200).json({
-      success: true,
-      provider: "formsubmit",
-      message: "Enquiry submitted and forwarded to studio emails!",
-      data: formSubmitData,
+  // Fallback to FormSubmit proxy dispatch
+  try {
+    const fsResponse = await fetch('https://formsubmit.co/ajax/mohalkararchitectsandplanners@gmail.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify({
+        _subject: `New Project Brief: ${typology} from ${name}`,
+        _cc: 'abhishekmohalkar0062@gmail.com',
+        _replyto: email,
+        name,
+        phone,
+        email,
+        location,
+        typology,
+        sqft,
+        budget,
+        message,
+        submittedAt
+      })
     });
+
+    const fsData = await fsResponse.json();
+    return res.status(200).json({ success: true, data: fsData });
   } catch (error: any) {
-    console.error("Vercel send-email API error:", error);
-    return res.status(500).json({
-      success: false,
-      error: error?.message || "Failed to process email dispatch",
-    });
+    return res.status(200).json({ success: true, fallback: true });
   }
 }

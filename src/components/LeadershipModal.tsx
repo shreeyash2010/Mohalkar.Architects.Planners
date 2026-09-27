@@ -1,181 +1,74 @@
-import React from "react";
-import { X, Instagram, Linkedin, Mail, CheckCircle2, Award, Briefcase } from "lucide-react";
-import { LeadershipProfile } from "../data/siteData";
-import { useTheme } from "../context/ThemeContext";
+import React from 'react';
+import { X, Award, CheckCircle2 } from 'lucide-react';
+import { TeamMember } from '../data/siteData';
 
 interface LeadershipModalProps {
-  profile: LeadershipProfile | null;
+  member: TeamMember | null;
   onClose: () => void;
-  onOpenEnquiry: () => void;
 }
 
-export const LeadershipModal: React.FC<LeadershipModalProps> = ({
-  profile,
-  onClose,
-  onOpenEnquiry,
-}) => {
-  const { isDark } = useTheme();
-  if (!profile) return null;
+export const LeadershipModal: React.FC<LeadershipModalProps> = ({ member, onClose }) => {
+  if (!member) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4"
-      onClick={onClose}
-    >
-      <div
-        className={`relative w-full max-w-2xl max-h-[92vh] overflow-y-auto border rounded-xl shadow-2xl p-5 sm:p-8 transition-colors ${
-          isDark
-            ? "bg-[#12151c] border-[#252830] text-[#e2e4e8]"
-            : "bg-white border-[#dce2ec] text-neutral-900 shadow-2xl"
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className={`absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-lg transition-colors cursor-pointer ${
-            isDark
-              ? "text-neutral-400 hover:text-white hover:bg-[#1f242e]"
-              : "text-neutral-500 hover:text-black hover:bg-[#f1f3f6]"
-          }`}
-          aria-label="Close"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex flex-col sm:flex-row gap-6 items-start">
-          {/* Avatar frame */}
-          <div
-            className={`relative w-28 h-28 sm:w-36 sm:h-36 shrink-0 rounded-xl overflow-hidden border p-1 shadow-lg ${
-              isDark ? "border-[#c8a96e]/40 bg-[#161a22]" : "border-[#c8a96e]/60 bg-[#f8f9fb]"
-            }`}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/85 backdrop-blur-md">
+      <div className="relative w-full max-w-2xl bg-[#fbfaf8] dark:bg-[#0e0e10] border border-neutral-300 dark:border-neutral-800 shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100/50 dark:bg-neutral-900/50">
+          <span className="text-xs font-mono tracking-widest text-[#c8a96e] uppercase">
+            Principal Leadership
+          </span>
+          <button
+            onClick={onClose}
+            className="p-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
           >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <img
-              src={profile.photo}
-              alt={profile.name}
-              className="w-full h-full object-contain rounded-lg"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = "/images/ceo.png";
-              }}
+              src={member.image}
+              alt={member.name}
+              className="w-32 h-32 object-cover rounded-full border-2 border-[#c8a96e]/60 shrink-0"
             />
-            <span className="absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[#c8a96e] text-[#0c0e12] rounded shadow-sm">
-              {profile.designation}
-            </span>
-          </div>
-
-          {/* Details */}
-          <div className="flex-1 space-y-3">
-            <div>
-              <h3
-                className={`font-serif text-2xl font-bold ${
-                  isDark ? "text-white" : "text-neutral-900"
-                }`}
-              >
-                {profile.name}
-              </h3>
-              <p className="text-xs uppercase tracking-wider text-[#c8a96e] font-semibold mt-0.5">
-                {profile.role}
-              </p>
-            </div>
-
-            <p
-              className={`text-xs leading-relaxed ${
-                isDark ? "text-neutral-300" : "text-neutral-700"
-              }`}
-            >
-              {profile.fullBio}
-            </p>
-
-            {/* Credentials / Honors */}
-            <div
-              className={`pt-2 space-y-1.5 border-t ${
-                isDark ? "border-[#1e232d]" : "border-[#e5e9f0]"
-              }`}
-            >
-              <p
-                className={`text-[11px] uppercase tracking-wider font-semibold flex items-center gap-1.5 ${
-                  isDark ? "text-neutral-400" : "text-neutral-500"
-                }`}
-              >
-                <Award className="w-3.5 h-3.5 text-[#c8a96e]" />
-                Key Focus &amp; Credentials
-              </p>
-              {profile.credentials.map((cred, idx) => (
-                <div
-                  key={idx}
-                  className={`flex items-center gap-2 text-xs ${
-                    isDark ? "text-neutral-300" : "text-neutral-700"
-                  }`}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#c8a96e] shrink-0" />
-                  <span>{cred}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Action & Socials */}
-            <div
-              className={`pt-4 flex flex-wrap items-center justify-between gap-4 border-t ${
-                isDark ? "border-[#1e232d]" : "border-[#e5e9f0]"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                {profile.social.instagram && (
-                  <a
-                    href={profile.social.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`p-2 rounded-lg border transition-colors ${
-                      isDark
-                        ? "border-[#252830] text-neutral-400 hover:text-[#c8a96e] hover:border-[#c8a96e]"
-                        : "border-[#d8dde6] text-neutral-600 hover:text-black hover:border-[#c8a96e] bg-white shadow-sm"
-                    }`}
-                    title="Instagram Profile"
-                  >
-                    <Instagram className="w-4 h-4" />
-                  </a>
-                )}
-                {profile.social.linkedin && (
-                  <a
-                    href={profile.social.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`p-2 rounded-lg border transition-colors ${
-                      isDark
-                        ? "border-[#252830] text-neutral-400 hover:text-[#c8a96e] hover:border-[#c8a96e]"
-                        : "border-[#d8dde6] text-neutral-600 hover:text-black hover:border-[#c8a96e] bg-white shadow-sm"
-                    }`}
-                    title="LinkedIn Profile"
-                  >
-                    <Linkedin className="w-4 h-4" />
-                  </a>
-                )}
-                {profile.social.email && (
-                  <a
-                    href={`mailto:${profile.social.email}`}
-                    className={`p-2 rounded-lg border transition-colors ${
-                      isDark
-                        ? "border-[#252830] text-neutral-400 hover:text-[#c8a96e] hover:border-[#c8a96e]"
-                        : "border-[#d8dde6] text-neutral-600 hover:text-black hover:border-[#c8a96e] bg-white shadow-sm"
-                    }`}
-                    title="Send Email"
-                  >
-                    <Mail className="w-4 h-4" />
-                  </a>
-                )}
+            <div className="space-y-1.5 text-center sm:text-left">
+              <h2 className="font-serif text-2xl sm:text-3xl font-medium text-neutral-900 dark:text-neutral-100">
+                {member.name}
+              </h2>
+              <div className="text-xs font-mono text-[#c8a96e]">{member.role}</div>
+              <div className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
+                {member.credentials}
               </div>
-
-              <button
-                onClick={() => {
-                  onClose();
-                  onOpenEnquiry();
-                }}
-                className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[#0c0e12] bg-[#c8a96e] hover:bg-[#dfc085] rounded-md transition-colors cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95"
-              >
-                <Briefcase className="w-3.5 h-3.5" />
-                <span>Consult with {profile.name.split(" ")[0]}</span>
-              </button>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+              Specialization &amp; Expertise Focus
+            </div>
+            <div className="p-3 bg-[#c8a96e]/10 border border-[#c8a96e]/30 text-xs font-mono text-[#c8a96e]">
+              {member.specialization}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+              Biography &amp; Professional Philosophy
+            </div>
+            <p className="text-sm text-neutral-600 dark:text-neutral-300 font-light leading-relaxed">
+              {member.bio}
+            </p>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-100/40 dark:bg-neutral-900/40 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 text-xs font-mono uppercase tracking-wider bg-[#c8a96e] text-neutral-950 font-semibold"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

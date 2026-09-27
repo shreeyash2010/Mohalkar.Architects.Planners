@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Eye,
@@ -15,12 +16,16 @@ import {
   Trees,
   Layers,
   Sparkles,
+  Star,
+  ArrowUpDown,
   ChevronDown,
   ArrowRight,
   Download,
   Loader2,
   CheckCircle2,
-  FileDown
+  FileDown,
+  ArrowUpAZ,
+  Maximize
 } from "lucide-react";
 import { PROJECT_CATEGORIES, ProjectItem } from "../data/projectsData";
 import { getPublishedProjects } from "../utils/projectStorage";
@@ -47,6 +52,17 @@ const CATEGORY_SPOTLIGHTS: Record<
     badgeBg: string;
   }
 > = {
+  featured: {
+    title: "Curated Masterworks & Signature Portfolio",
+    subtitle: "High-Impact Commercial Hubs, Luxury Villas & Master Schemes",
+    description:
+      "A handpicked curation of Mohalkar Architects & Planners' signature benchmarks, demonstrating structural mastery, NBC-compliant planning, and climate-responsive engineering.",
+    highlights: ["Apex Commercial Plaza", "Havle Luxury Villa", "5,000 sq.ft Bungalow", "Tuljabhavani Precinct Master Plan"],
+    enquiryPreset: "Signature Architectural Commission",
+    accentColor: "from-amber-500/25 via-yellow-500/10 to-[#c8a96e]/15 border-[#c8a96e]/50 text-[#c8a96e]",
+    lightAccentColor: "from-amber-50 via-yellow-50/70 to-[#fffbf2] border-[#c8a96e]/60 text-amber-950 shadow-sm",
+    badgeBg: "bg-[#c8a96e]/20 text-[#c8a96e] border-[#c8a96e]/40",
+  },
   residential: {
     title: "Residential Architecture & Luxury Estates",
     subtitle: "Custom Villas, Bungalow Layouts & Private Residences",
@@ -82,6 +98,15 @@ const CATEGORY_SPOTLIGHTS: Record<
   },
 };
 
+export type SortOption =
+  | "featured"
+  | "residential"
+  | "commercial"
+  | "landscape"
+  | "scale"
+  | "title"
+  | "newest";
+
 export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   setActiveTab,
   onSelectProject,
@@ -106,6 +131,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   const activeProjects = customProjects && customProjects.length > 0 ? customProjects : internalProjects;
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("featured");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [otherCategoriesOpen, setOtherCategoriesOpen] = useState<boolean>(false);
@@ -134,32 +160,106 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 
   // Calculate category counts dynamically directly from the archive
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: activeProjects.length };
+    const counts: Record<string, number> = {
+      all: activeProjects.length,
+      featured: activeProjects.filter((p) => !!p.featured).length,
+    };
     activeProjects.forEach((p) => {
       counts[p.category] = (counts[p.category] || 0) + 1;
     });
     return counts;
   }, [activeProjects]);
 
-  // Filtered projects by category and search term
+  // Helper function to extract numerical scale value for sorting
+  const parseScaleValue = (scaleStr?: string): number => {
+    if (!scaleStr) return 0;
+    const cleanStr = scaleStr.toLowerCase();
+    const match = cleanStr.match(/[\d,.]+/);
+    if (!match) return 0;
+    const num = parseFloat(match[0].replace(/,/g, ""));
+    if (isNaN(num)) return 0;
+    if (cleanStr.includes("acre")) return num * 43560; // Convert acre to sq.ft
+    if (cleanStr.includes("sq.m") || cleanStr.includes("sqm")) return num * 10.764; // Convert sq.m to sq.ft
+    return num;
+  };
+
+  // Filtered and dynamically sorted projects
   const filteredProjects = useMemo(() => {
-    return activeProjects.filter((project) => {
+    const list = activeProjects.filter((project) => {
       const matchesCategory =
-        selectedCategory === "all" || project.category === selectedCategory;
+        selectedCategory === "all"
+          ? true
+          : selectedCategory === "featured"
+          ? !!project.featured
+          : project.category === selectedCategory;
+
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         q === "" ||
         project.title.toLowerCase().includes(q) ||
         project.tag.toLowerCase().includes(q) ||
         project.alt.toLowerCase().includes(q) ||
+        project.category.toLowerCase().includes(q) ||
         (project.location && project.location.toLowerCase().includes(q)) ||
         (project.scale && project.scale.toLowerCase().includes(q)) ||
         (project.scope && project.scope.toLowerCase().includes(q));
+
       return matchesCategory && matchesSearch;
     });
-  }, [activeProjects, selectedCategory, searchQuery]);
 
-  // Primary category chips definitions
+    // Dynamic sorting system
+    return [...list].sort((a, b) => {
+      switch (sortBy) {
+        case "featured": {
+          // Featured projects first, then alphabetical
+          if (a.featured && !b.featured) return -1;
+          if (!a.featured && b.featured) return 1;
+          return a.title.localeCompare(b.title);
+        }
+        case "residential": {
+          // Residential category first
+          const aIsResi = a.category === "residential";
+          const bIsResi = b.category === "residential";
+          if (aIsResi && !bIsResi) return -1;
+          if (!aIsResi && bIsResi) return 1;
+          return a.title.localeCompare(b.title);
+        }
+        case "commercial": {
+          // Commercial category first
+          const aIsComm = a.category === "commercial";
+          const bIsComm = b.category === "commercial";
+          if (aIsComm && !bIsComm) return -1;
+          if (!aIsComm && bIsComm) return 1;
+          return a.title.localeCompare(b.title);
+        }
+        case "landscape": {
+          // Landscape category first
+          const aIsLand = a.category === "landscape";
+          const bIsLand = b.category === "landscape";
+          if (aIsLand && !bIsLand) return -1;
+          if (!aIsLand && bIsLand) return 1;
+          return a.title.localeCompare(b.title);
+        }
+        case "scale": {
+          // Largest scale / area first
+          return parseScaleValue(b.scale) - parseScaleValue(a.scale);
+        }
+        case "title": {
+          return a.title.localeCompare(b.title);
+        }
+        case "newest": {
+          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          if (dateA !== dateB) return dateB - dateA;
+          return b.id.localeCompare(a.id);
+        }
+        default:
+          return 0;
+      }
+    });
+  }, [activeProjects, selectedCategory, searchQuery, sortBy]);
+
+  // Primary category chips definitions with Featured, Residential, Commercial, and Landscape
   const primaryCategoryChips = [
     {
       id: "all",
@@ -167,6 +267,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
       subtitle: "Full Architectural Archive",
       count: categoryCounts["all"] || 0,
       icon: Layers,
+    },
+    {
+      id: "featured",
+      label: "Featured",
+      subtitle: "Curated Masterworks",
+      count: categoryCounts["featured"] || 0,
+      icon: Sparkles,
     },
     {
       id: "residential",
@@ -193,7 +300,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 
   // Secondary categories
   const secondaryCategories = PROJECT_CATEGORIES.filter(
-    (c) => !["all", "residential", "commercial", "landscape"].includes(c.id)
+    (c) => !["all", "featured", "residential", "commercial", "landscape"].includes(c.id)
   );
 
   const activeSpotlight = CATEGORY_SPOTLIGHTS[selectedCategory];
@@ -316,7 +423,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           </div>
 
           {/* Primary Dynamic Category Chips */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
             {primaryCategoryChips.map((chip) => {
               const Icon = chip.icon;
               const isActive = selectedCategory === chip.id;
@@ -394,8 +501,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
             })}
           </div>
 
-          {/* Secondary Disciplines Drawer & Quick Toggles */}
-          <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Secondary Disciplines Drawer, Dynamic Sorting & View Mode Toolbar */}
+          <div className="pt-1 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            {/* Left Controls: Secondary Drawer & Clear Filter */}
             <div className="flex items-center flex-wrap gap-1.5">
               <button
                 onClick={() => setOtherCategoriesOpen(!otherCategoriesOpen)}
@@ -418,61 +526,91 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                 />
               </button>
 
-              {(selectedCategory !== "all" || searchQuery) && (
+              {(selectedCategory !== "all" || searchQuery || sortBy !== "featured") && (
                 <button
                   onClick={() => {
                     setSelectedCategory("all");
                     setSearchQuery("");
+                    setSortBy("featured");
                   }}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border flex items-center gap-1 cursor-pointer transition-colors ${
                     isDark
                       ? "text-neutral-400 hover:text-white hover:bg-[#1a1e28] border-[#252830]"
                       : "text-neutral-700 hover:text-black hover:bg-[#f3f4f8] border-[#d8dde6] shadow-sm"
                   }`}
-                  title="Clear all filters and search"
+                  title="Clear all filters, search, and sorting"
                 >
                   <X className="w-3.5 h-3.5 text-[#c8a96e]" />
-                  <span>Clear Filter</span>
+                  <span>Clear All</span>
                 </button>
               )}
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <span className={`text-[11px] hidden sm:inline ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
-                View Mode:
-              </span>
-              <div
-                className={`flex items-center gap-1 p-1 rounded-lg border ${
-                  isDark ? "bg-[#141720] border-[#252830]" : "bg-[#f4f6fa] border-[#dce2ec]"
-                }`}
-              >
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-1.5 rounded transition-colors cursor-pointer ${
-                    viewMode === "grid"
-                      ? "bg-[#c8a96e] text-[#0c0e12]"
-                      : isDark
-                      ? "text-neutral-400 hover:text-white"
-                      : "text-neutral-600 hover:text-black"
+            {/* Right Controls: Dynamic Sort Selector & View Mode Toggle */}
+            <div className="flex items-center flex-wrap sm:flex-nowrap gap-2.5 justify-between sm:justify-end">
+              {/* Dynamic Sorting Dropdown */}
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[11px] font-medium hidden sm:inline ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
+                  Sort By:
+                </span>
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    aria-label="Sort projects by category and criteria"
+                    className={`pl-8 pr-7 py-1.5 rounded-lg text-xs font-medium border appearance-none transition-all cursor-pointer focus:outline-none focus:border-[#c8a96e] ${
+                      isDark
+                        ? "bg-[#141720] border-[#252830] text-neutral-200 hover:border-[#c8a96e]/60"
+                        : "bg-white border-[#dce2ec] text-neutral-800 hover:border-[#c8a96e] shadow-sm"
+                    }`}
+                  >
+                    <option value="featured">⭐ Sort: Featured First</option>
+                    <option value="residential">🏠 Sort: Residential</option>
+                    <option value="commercial">🏢 Sort: Commercial</option>
+                    <option value="landscape">🌳 Sort: Landscape</option>
+                    <option value="scale">📐 Sort: Largest Scale</option>
+                    <option value="newest">🕒 Sort: Latest Additions</option>
+                    <option value="title">🔤 Sort: Title (A → Z)</option>
+                  </select>
+                  <ArrowUpDown className="w-3.5 h-3.5 text-[#c8a96e] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="w-3 h-3 text-neutral-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-1.5">
+                <div
+                  className={`flex items-center gap-1 p-1 rounded-lg border ${
+                    isDark ? "bg-[#141720] border-[#252830]" : "bg-[#f4f6fa] border-[#dce2ec]"
                   }`}
-                  title="Grid Gallery"
                 >
-                  <Grid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-1.5 rounded transition-colors cursor-pointer ${
-                    viewMode === "list"
-                      ? "bg-[#c8a96e] text-[#0c0e12]"
-                      : isDark
-                      ? "text-neutral-400 hover:text-white"
-                      : "text-neutral-600 hover:text-black"
-                  }`}
-                  title="Technical Sheet List"
-                >
-                  <List className="w-4 h-4" />
-                </button>
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-1.5 rounded transition-colors cursor-pointer ${
+                      viewMode === "grid"
+                        ? "bg-[#c8a96e] text-[#0c0e12]"
+                        : isDark
+                        ? "text-neutral-400 hover:text-white"
+                        : "text-neutral-600 hover:text-black"
+                    }`}
+                    title="Grid Gallery"
+                  >
+                    <Grid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-1.5 rounded transition-colors cursor-pointer ${
+                      viewMode === "list"
+                        ? "bg-[#c8a96e] text-[#0c0e12]"
+                        : isDark
+                        ? "text-neutral-400 hover:text-white"
+                        : "text-neutral-600 hover:text-black"
+                    }`}
+                    title="Technical Sheet List"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -602,10 +740,18 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 
         {/* ── PROJECT ITEMS GRID / LIST ─────────────── */}
         {viewMode === "grid" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 pt-2">
-            {filteredProjects.map((project, idx) => (
-              <div
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 pt-2">
+             {filteredProjects.map((project, idx) => (
+              <motion.div
                 key={project.id}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{
+                  duration: 0.5,
+                  delay: Math.min((idx % 6) * 0.08, 0.4),
+                  ease: [0.22, 1, 0.36, 1],
+                }}
                 onClick={() => onSelectProject(project)}
                 className={`group relative rounded-xl overflow-hidden border transition-all duration-300 cursor-pointer shadow-lg hover:-translate-y-1 flex flex-col justify-between ${
                   isDark
@@ -784,15 +930,23 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         ) : (
           /* Technical List / Sheet Mode */
           <div className="pt-2 space-y-3">
             {filteredProjects.map((project, idx) => (
-              <div
+              <motion.div
                 key={project.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{
+                  duration: 0.45,
+                  delay: Math.min((idx % 6) * 0.06, 0.3),
+                  ease: [0.22, 1, 0.36, 1],
+                }}
                 onClick={() => onSelectProject(project)}
                 className={`p-3 sm:p-4 rounded-xl border transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 shadow-sm group ${
                   isDark
@@ -904,7 +1058,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     <Eye className="w-4 h-4" />
                   </span>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
