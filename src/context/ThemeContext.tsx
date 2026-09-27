@@ -1,4 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { Menu, X, ArrowUpRight, Phone, MessageCircle } from "lucide-react";
+import { SITE_INFO } from "../data/siteData";
+import { ThemeToggle } from "./ThemeToggle";
+import { useTheme } from "../context/ThemeContext";
 
 type Theme = 'light' | 'dark';
 
